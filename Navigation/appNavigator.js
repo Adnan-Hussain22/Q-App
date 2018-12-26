@@ -1,13 +1,16 @@
-import { createStackNavigator, createAppContainer } from "react-navigation";
-import * as Screens from "../Screens";
+import { createStackNavigator, createAppContainer } from 'react-navigation'
+import * as Screens from '../Screens'
 const StackNavigation = createStackNavigator(
   {
-    Login: {
-      screen: Screens.Login
-    },
+    // Login: {
+    //   screen: Screens.Login
+    // },
     // Home: {
     //   screen: Screens.Home
     // },
+    Company: {
+      screen: Screens.Company
+    },
     // CompanyData: {
     //   screen: Screens.CompanyData
     // },
@@ -16,12 +19,12 @@ const StackNavigation = createStackNavigator(
     // }
   },
   {
-    headerMode: "none",
+    headerMode: 'none',
     navigationOptions: ({ navigation }) => ({
       header: null
     })
   }
-);
+)
 
-const navigation = createAppContainer(StackNavigation);
-export default navigation;
+const navigation = createAppContainer(StackNavigation)
+export default navigation
