@@ -52,10 +52,12 @@ export default class CompanyData extends React.Component {
     admins: [],
     cameraType: Camera.Constants.Type.front
   }
-  componentDidMount () {
+  async componentDidMount () {
     navigator.geolocation.getCurrentPosition(position => {
       this.setState({ coords: position.coords })
     })
+    const authUser = await AsyncStorage.getItem('authUser')
+    const authUserJson = authUser ? JSON.parse(authUser) : null
   }
 
   handleSetDate = date => {
@@ -228,7 +230,7 @@ export default class CompanyData extends React.Component {
 
   handleSaveData = async () => {
     console.log('submitting man!')
-    const { date, company, timing, textCompany, coords,admins } = this.state
+    const { date, company, timing, textCompany, coords, admins } = this.state
     const companiesRef = Firebase.fireStore.collection('company')
     const companiesMeta = Firebase.fireStore.collection('companyMeta')
     const authUser = JSON.parse(await AsyncStorage.getItem('authUser'))
@@ -244,7 +246,7 @@ export default class CompanyData extends React.Component {
         admins
       }
       const metaObj = {
-        registeredBy:authUser.id,
+        registeredBy: authUser.id,
         admins
       }
       const metaId = (await companiesMeta.add(metaObj)).id
@@ -287,7 +289,7 @@ export default class CompanyData extends React.Component {
   }
 
   handleCloseAdminModal = () => {
-    this.setState({showTextModal:false})
+    this.setState({ showTextModal: false })
     console.log('handleCloseAdminModal')
   }
 
@@ -501,7 +503,9 @@ export default class CompanyData extends React.Component {
                 <Text> Admins</Text>
               </View>
               <View>
-                <TouchableOpacity onPress={()=>this.setState({showTextModal:true})}>
+                <TouchableOpacity
+                  onPress={() => this.setState({ showTextModal: true })}
+                >
                   <Icon type='FontAwesome' name='user-plus' />
                 </TouchableOpacity>
               </View>
@@ -515,7 +519,8 @@ export default class CompanyData extends React.Component {
                 bordered
                 dark
                 onPress={() => {
-                  this.setState({ showCompanyList: true })
+                  // this.setState({ showCompanyList: true })
+                  console.log(this.state.company)
                 }}
               >
                 <Text style={styles.text}>Show companies</Text>
@@ -722,6 +727,7 @@ export default class CompanyData extends React.Component {
           showModal={this.state.showTextModal}
           handleAddAdmin={this.handleAddAdmin}
           handleCloseAdminModal={this.handleCloseAdminModal}
+          inputPlaceHolder='Enter admin user name'
         />
         {admins.map((value, index) => (
           <Badge style={styles.adminBadge} key={value + index}>

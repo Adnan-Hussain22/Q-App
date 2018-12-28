@@ -41,7 +41,7 @@ class Loader extends Component {
           <View style={styles.Wrapper}>
             <Item>
               <Input
-                placeholder='Enter admin id'
+                placeholder={this.props.inputPlaceHolder}
                 value={textAdmin}
                 onChangeText={text => this.setState({ textAdmin: text })}
               />

@@ -4698,6 +4698,11 @@ react-native-branch@2.2.5:
   resolved "https://registry.yarnpkg.com/react-native-branch/-/react-native-branch-2.2.5.tgz#4074dd63b4973e6397d9ce50e97b57c77a518e9d"
   integrity sha1-QHTdY7SXPmOX2c5Q6XtXx3pRjp0=
 
+react-native-countdown-circle@^3.0.0:
+  version "3.0.0"
+  resolved "https://registry.yarnpkg.com/react-native-countdown-circle/-/react-native-countdown-circle-3.0.0.tgz#000e739ac970df847afc60e3dec733260ff37cff"
+  integrity sha512-z4J3EChIftrbMuLZvLQ3UvMstppJ3wjAAsCvQDEv/XMFw0kGdOVAVrX+D0RP0Y+gOERaVTLhC49ax683EOFIag==
+
 react-native-drawer@2.5.0:
   version "2.5.0"
   resolved "https://registry.yarnpkg.com/react-native-drawer/-/react-native-drawer-2.5.0.tgz#022cba5c0516126a9fc9cce3185cb46c644b51c4"
@@ -4776,6 +4781,13 @@ react-native-screens@1.0.0-alpha.15:
   version "1.0.0-alpha.19"
   resolved "https://registry.yarnpkg.com/react-native-screens/-/react-native-screens-1.0.0-alpha.19.tgz#ecf3c9023e169b7013266d40b9c5599f37667f6d"
   integrity sha512-+a7GdwzLWYWYVUJMg+XuyBoRFGD8GdGyBfebuTNBY+xwUZpTXCaK/GlLGL6EE3h0iBHZu83do7zViEailWRNyA==
+
+react-native-step-indicator@^0.0.9:
+  version "0.0.9"
+  resolved "https://registry.yarnpkg.com/react-native-step-indicator/-/react-native-step-indicator-0.0.9.tgz#939b78b43c131c048cf52493c4ed8a1bbc8ce034"
+  integrity sha512-oiHYIMNrSePamQHRE1rf+9NfrY7LorEOIzjI3ya5nfmpGW2pBxjbRDQgZboVPpi5hradLqadw5qVb/CAOGypmQ==
+  dependencies:
+    prop-types "^15.6.0"
 
 react-native-svg@8.0.8:
   version "8.0.8"

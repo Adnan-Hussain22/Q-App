@@ -14,4 +14,4 @@ const fireStore = App.firestore();
 fireStore.settings({
   timestampsInSnapshots: true
 });
-export { fireStore,App };
+export { fireStore,App,firebase };
