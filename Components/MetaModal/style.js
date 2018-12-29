@@ -1,4 +1,4 @@
-import { StyleSheet } from 'react-native'
+import { StyleSheet,Dimensions } from 'react-native'
 const styles = StyleSheet.create({
   modalBackground: {
     flex: 1,
@@ -10,6 +10,7 @@ const styles = StyleSheet.create({
   Wrapper: {
     backgroundColor: '#FFFFFF',
     minHeight: 120,
+    maxWidth:Dimensions.get('screen').width - 15,
     minWidth: 155,
     borderRadius: 15,
     padding: 10,

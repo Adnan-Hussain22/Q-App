@@ -4,10 +4,10 @@ const StackNavigation = createStackNavigator(
   {
     // Login: {
     //   screen: Screens.Login
+    // // },
+    // Home: {
+    //   screen: Screens.Home
     // },
-    Home: {
-      screen: Screens.Home
-    },
     Companies: {
       screen: Screens.Companies
     },

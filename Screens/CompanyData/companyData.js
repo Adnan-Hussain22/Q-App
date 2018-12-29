@@ -182,6 +182,7 @@ export default class CompanyData extends React.Component {
   }
 
   handleSelectCompany = (value, index) => {
+    console.log(value.location.formattedAddress)
     this.setState({
       company: value,
       showCompanyList: false,
@@ -237,19 +238,22 @@ export default class CompanyData extends React.Component {
     this.setState({ loading: true })
     setTimeout(() => this.setState({ showTextModal: false }), 10000)
     try {
+      const metaObj = {
+        registeredBy: 'adnanrajput42@gmail.com', // should be changed by email of current auht
+        admins:admins.concat('adnanrajput42@gmail.com'),
+      }
+      const metaId = (await companiesMeta.add(metaObj)).id
       const dataObj = {
-        company: textCompany,
+        name: textCompany,
+        address:company.location.formattedAddress,
         since: date,
         timing,
         certificates: await this.handleSaveImagesToStorage(),
         coords,
-        admins
+        admins:admins.concat('adnanrajput42@gmail.com'),
+        registeredBy:'adnanrajput42@gmail.com',
+        id:metaId
       }
-      const metaObj = {
-        registeredBy: authUser.id,
-        admins
-      }
-      const metaId = (await companiesMeta.add(metaObj)).id
       await companiesRef.doc(metaId).set(dataObj)
       this.setState({ loading: false })
       setTimeout(

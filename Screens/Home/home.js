@@ -9,7 +9,7 @@ import {
   TouchableOpacity,
   ActivityIndicator
 } from 'react-native'
-import {Button} from 'native-base';
+import { Button } from 'native-base'
 import { Firebase } from '../../Config'
 import styles from './style'
 import Loader from '../Loader/loader'
@@ -19,7 +19,7 @@ export default class App extends React.Component {
     authUser: '',
     companies: [],
     loading: false,
-    showModal: true,
+    showModal: false,
     modalMeta: null
   }
 
@@ -76,6 +76,8 @@ export default class App extends React.Component {
           const data = res.data()
           companies = companies.concat(data)
         })
+        console.log(companies)
+        this.setState({ loading: false })
         this.setState({ companies }, () => {
           this.props.navigation.navigate('Companies', { companies })
         })
@@ -87,6 +89,12 @@ export default class App extends React.Component {
         })
       }
     } catch (err) {}
+  }
+
+  handleRegisterCompany = () => {
+    this.setState({ showModal: false }, () => {
+      this.props.navigation.navigate('CompanyData')
+    })
   }
 
   handleUserClick = () => {
@@ -109,7 +117,7 @@ export default class App extends React.Component {
       <View style={styles.container}>
         <MetaModal
           showModal={showModal}
-          meta={this.renderCompanyNonValidated()}
+          meta={meta}
           handleOnCloseModal={this.handleOnCloseModal}
         />
         <NativeButton title='Company' onPress={this.handleCompanyClick} />
@@ -122,33 +130,28 @@ export default class App extends React.Component {
 
   renderCompanyNonValidated = () => {
     return (
-      <View
-        style={{
-          display: 'flex',
-          flexDirection: 'column',
-          justifyContent: 'space-between',
-          height: 120
-        }}
-      >
+      <View style={styles.confirmModal}>
         <View style={{ padding: 10 }}>
           <Text>Sorry:( You are not registered with any company</Text>
           <Text>Do you want to register a company ?</Text>
         </View>
-        <View
-          style={{
-            display: 'flex',
-            flexDirection: 'row',
-            justifyContent: 'space-between'
-          }}
-        >
-          <TouchableOpacity onPress={() => console.log('Cancel')}>
-            <Button light style={{backgroundColor:'transparent',borderColor:'none',elevation:0,shadowColor:'transparent'}}>
-              <Text> Light </Text>
+        <View style={styles.confirmModalBtnContainer}>
+          <TouchableOpacity style={{ borderRadius: 5 }}>
+            <Button
+              light
+              style={styles.confirmModalBtn}
+              onPress={() => this.setState({ showModal: false })}
+            >
+              <Text style={{ color: 'yellow' }}> Cancel </Text>
             </Button>
           </TouchableOpacity>
-          <TouchableOpacity onPress={() => console.log('Cancel')}>
-            <Button light>
-              <Text> Light </Text>
+          <TouchableOpacity style={{ borderRadius: 5 }}>
+            <Button
+              light
+              style={styles.confirmModalBtn}
+              onPress={this.handleRegisterCompany}
+            >
+              <Text style={{ color: 'red' }}> OK </Text>
             </Button>
           </TouchableOpacity>
         </View>
