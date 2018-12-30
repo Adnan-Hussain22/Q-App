@@ -1,8 +1,8 @@
-import React from 'react'
-import { Text, View, Button, TouchableOpacity, Dimensions } from 'react-native'
-import { Firebase } from '../../Config'
-import styles from './style'
-import { MetaModal } from '../../Components'
+import React from "react";
+import { Text, View, Button, TouchableOpacity, Dimensions } from "react-native";
+import { Firebase } from "../../Config";
+import styles from "./style";
+import { MetaModal } from "../../Components";
 import {
   Container,
   Content,
@@ -11,65 +11,110 @@ import {
   Left,
   Right,
   Icon
-} from 'native-base'
-import Loader from '../Loader/loader'
+} from "native-base";
+import Loader from "../Loader/loader";
 const company = {
-  address: ['Creek Club Bakery, Phase VIII, DHA', 'کراچی', 'پاکستان'],
-  admins: ['adnanrajput22@gmail.com', 'adnanrajput42@gmail.com'],
+  address: ["Creek Club Bakery, Phase VIII, DHA", "کراچی", "پاکستان"],
+  admins: ["adnanrajput22@gmail.com", "adnanrajput42@gmail.com"],
   certificates: [
-    'https://firebasestorage.googleapis.com/v0/b/qapp-ca040.appspot.com/o/companyCertificates%2Fa9f942ea-9351-4157-b7e5-dbad49b9edc7.jpg?alt=media&token=25d0a999-3b2f-4e62-98a4-1660e1236861',
-    'https://firebasestorage.googleapis.com/v0/b/qapp-ca040.appspot.com/o/companyCertificates%2Fdabcd738-071f-42df-8da8-d78e77e0161f.jpg?alt=media&token=cf960777-e23e-4e5c-b1e3-035adfcaba04',
-    'https://firebasestorage.googleapis.com/v0/b/qapp-ca040.appspot.com/o/companyCertificates%2F11020cd1-3741-49ab-8dba-1643525141ac.jpg?alt=media&token=e062109b-f3c8-41c7-95c3-5bf732d57698'
+    "https://firebasestorage.googleapis.com/v0/b/qapp-ca040.appspot.com/o/companyCertificates%2Fa9f942ea-9351-4157-b7e5-dbad49b9edc7.jpg?alt=media&token=25d0a999-3b2f-4e62-98a4-1660e1236861",
+    "https://firebasestorage.googleapis.com/v0/b/qapp-ca040.appspot.com/o/companyCertificates%2Fdabcd738-071f-42df-8da8-d78e77e0161f.jpg?alt=media&token=cf960777-e23e-4e5c-b1e3-035adfcaba04",
+    "https://firebasestorage.googleapis.com/v0/b/qapp-ca040.appspot.com/o/companyCertificates%2F11020cd1-3741-49ab-8dba-1643525141ac.jpg?alt=media&token=e062109b-f3c8-41c7-95c3-5bf732d57698"
   ],
   coords: {
     latitude: 24.8481905,
     longitude: 67.0277179
   },
-  name: 'Tech Native',
-  registeredBy: 'adnanrajput42@gmail.com',
+  name: "Tech Native",
+  registeredBy: "adnanrajput42@gmail.com",
   since: 1537556400000,
+  id: "Lgu1AvZFW4q1pFl76Jwq",
   timing: {
     from: {
-      amPM: 'AM',
-      hour: '08',
-      minute: '00'
+      amPM: "AM",
+      hour: "08",
+      minute: "00"
     },
     to: {
-      amPM: 'PM',
-      hour: '11',
-      minute: '00'
+      amPM: "PM",
+      hour: "11",
+      minute: "00"
     }
   }
-}
+};
 export default class App extends React.Component {
   state = {
     companies: [company],
     isReady: true,
     showMetaModal: false,
     metaCompany: null
+  };
+
+  componentDidMount() {
+    // const { companies } = this.props.navigation.state.params;
+    // console.log("componentDidMount...companies ==>", companies);
+    this.setState({ isReady: true });
   }
 
-  componentDidMount () {
-    // const { companies } = this.props.navigation.state.params
-    // console.log('componentDidMount...companies ==>', companies)
-    this.setState({ isReady: true })
-  }
+  handleSelectCompany = async (value, index) => {
+    try {
+      const { res, err, status } = await this.handleValidateTodayTokken(value);
+      if (res) {
+        let data = null
+        res.forEach(doc => {
+          data = doc.data();
+        });
+        this.props.navigation.navigate('Company',{status:true,data});
+      }
+    } catch (err) {
+      console.log(err);
+    }
+  };
 
-  handleSelectCompany = (value, index) => {
-    console.log(value)
-  }
+  //handle to validate either today's tokkens of the
+  //company is setup or not
+  handleValidateTodayTokken = async company => {
+    this.setState({ isReady: false });
+    const tokkensMetaRef = Firebase.fireStore.collection("tokkensMeta");
+    try {
+      const query = tokkensMetaRef
+        .where("company", "==", company.id)
+        .where("date", "==", new Date().toLocaleDateString());
+      const snap = await query.get();
+      this.setState({ isReady: true });
+      if (snap.size) {
+        return {
+          res: snap,
+          err: null,
+          status: 200
+        };
+      }
+      return {
+        res: null,
+        err: null,
+        status: 404
+      };
+    } catch (err) {
+      this.setState({ isReady: true });
+      return {
+        res: null,
+        err,
+        status: 500
+      };
+    }
+  };
 
   // check if something is fetching than show loader else render the view
-  render () {
-    const { isReady } = this.state
-    if (!isReady) return <Loader loading={!isReady} />
-    return this.renderView()
+  render() {
+    const { isReady } = this.state;
+    if (!isReady) return <Loader loading={!isReady} />;
+    return this.renderView();
   }
 
   // method to render the view
   renderView = () => {
-    console.log('renderView==>', companies)
-    const { companies, showMetaModal, metaCompany } = this.state
+    console.log("renderView==>", companies);
+    const { companies, showMetaModal, metaCompany } = this.state;
     return (
       <Container>
         <Content>
@@ -80,9 +125,9 @@ export default class App extends React.Component {
           />
           <Text
             style={{
-              backgroundColor: 'black',
-              color: 'white',
-              textAlign: 'center',
+              backgroundColor: "black",
+              color: "white",
+              textAlign: "center",
               padding: 10,
               paddingTop: 30
             }}
@@ -105,7 +150,7 @@ export default class App extends React.Component {
                     <Text>{value.name}</Text>
                   </Left>
                   <Right>
-                    <Icon name='arrow-forward' />
+                    <Icon name="arrow-forward" />
                   </Right>
                 </ListItem>
               </TouchableOpacity>
@@ -113,12 +158,12 @@ export default class App extends React.Component {
           </List>
         </Content>
       </Container>
-    )
-  }
+    );
+  };
 
   // method to render the companyMeta
   renderCompanyMeta = () => {
-    const { metaCompany } = this.state
+    const { metaCompany } = this.state;
     return (
       <View>
         <View style={{ marginBottom: 15 }}>
@@ -131,7 +176,7 @@ export default class App extends React.Component {
             </Text>
           </View>
           <View style={{ margin: 5 }}>
-            <Icon name='user' type='FontAwesome' />
+            <Icon name="user" type="FontAwesome" />
           </View>
         </View>
         <View style={styles.metaCompanyItem}>
@@ -141,7 +186,7 @@ export default class App extends React.Component {
             </Text>
           </View>
           <View style={{ margin: 5 }}>
-            <Icon name='location-on' type='MaterialIcons' />
+            <Icon name="location-on" type="MaterialIcons" />
           </View>
         </View>
         <View style={styles.metaCompanyItem}>
@@ -159,18 +204,18 @@ export default class App extends React.Component {
             </Text>
           </View>
           <View style={{ margin: 5 }}>
-            <Icon name='clock-o' type='FontAwesome' />
+            <Icon name="clock-o" type="FontAwesome" />
           </View>
         </View>
       </View>
-    )
-  }
+    );
+  };
 
   renderAddress = address => {
-    let address_d = ` `
+    let address_d = ` `;
     for (let i = 0; i < address.length; i++) {
-      address_d += `${address[i]}`
+      address_d += `${address[i]}`;
     }
-    return address_d
-  }
+    return address_d;
+  };
 }

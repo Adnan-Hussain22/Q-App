@@ -86,7 +86,32 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderStyle: 'solid'
   },
-  addTokkensContainer: {}
+  addTokkensContainer: {},
+  metaBrand: {
+    textAlign: 'center',
+    fontSize: 20,
+    fontWeight: 'bold'
+  },
+  metaItem: {
+    display: 'flex',
+    justifyContent: 'space-between',
+    flexDirection: 'row'
+  },
+  metaItemMeta: {
+    maxWidth: Dimensions.get('screen').width - 75
+  },
+  confirmModalBtnContainer: {
+    display: 'flex',
+    flexDirection: 'row',
+    justifyContent: 'space-between'
+  },
+  confirmModalBtn: {
+    padding: 10,
+    backgroundColor: 'transparent',
+    borderColor: 'transparent',
+    elevation: 0,
+    shadowColor: 'transparent'
+  }
 })
 const stepIndicatorCustomStyles = {
   stepIndicatorSize: 40,
