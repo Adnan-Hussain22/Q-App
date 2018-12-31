@@ -9,7 +9,7 @@ import {
   Text as NativeText
 } from "react-native";
 import { Firebase } from "../../Config";
-import { Container, Content, Button, Text, Icon } from "native-base";
+import { Container, Content, Button, Text, Icon, Thumbnail } from "native-base";
 import { MetaModal, NumericInput } from "../../Components";
 import styles, { customStyles } from "./style";
 import Loader from "../Loader/loader";
@@ -29,7 +29,8 @@ export default class Compony extends React.Component {
       tokkenCount: 0,
       tokkenTime: 0,
       tokkenSetuped: true,
-      tokkenSetup: setup_d
+      tokkenSetup: setup_d,
+      admins: []
     };
   }
 
@@ -86,6 +87,27 @@ export default class Compony extends React.Component {
 
   //= ==================End of Header handles===================//
 
+  //= ==================Main handles===================//
+
+  //= ==================End of main handles===================//
+
+  //= ==================Footer handles===================//
+
+  //handle to fetch the admins of the company
+  handleFetchAdmins = async () => {
+    const { tokkenSetup } = this.state;
+    const compayRef = Firebase.fireStore.collection("company");
+    try {
+      const data = (await compayRef.doc(tokkenSetup.company).get()).data();
+      const admins = [...data.certificates];
+      this.setState({ admins });
+    } catch (err) {
+      console.log(err);
+    }
+  };
+
+  //= ==================End of footer handles===================//
+
   render() {
     const { loading, meta, showMetaModal, tokkenSetuped } = this.state;
     if (loading) return <Loader loading={this.state.loading} />;
@@ -129,7 +151,12 @@ export default class Compony extends React.Component {
   };
 
   renderFooter = () => {
-    return <View style={styles.footer}>{this.renderAddTokkens()}</View>;
+    return (
+      <View style={styles.footer}>
+        {this.renderAddTokkens()}
+        {this.renderAdmins()}
+      </View>
+    );
   };
 
   //= ==================Header methods===================//
@@ -220,8 +247,8 @@ export default class Compony extends React.Component {
     return (
       <View style={styles.cardContainerOverlay}>
         {this.renderCard(this.renderTotalTokkensCard())}
-        {this.renderCard(this.renderRemainingTokkensCard())}
         {this.renderCard(this.renderBoughtTokkensCard())}
+        {this.renderCard(this.renderRemainingTokkensCard())}
         {this.renderCard(this.renderNextTokkenCard())}
       </View>
     );
@@ -235,8 +262,30 @@ export default class Compony extends React.Component {
   // method to render the card showing the total tokkens
   renderTotalTokkensCard = () => {
     return (
-      <View>
-        <NativeText>Total Tokkens</NativeText>
+      <View
+        style={{
+          display: "flex",
+          flexDirection: "column"
+        }}
+      >
+        <View style={[styles.cardItems]}>
+          <Icon
+            type="Foundation"
+            name="compass"
+            style={[
+              styles.cardIcon,
+              { color: "#484848", backgroundColor: "#EAEAEA" }
+            ]}
+          />
+        </View>
+        <View>
+          <NativeText style={[styles.cardMeta, { color: "#484848" }]}>
+            18
+          </NativeText>
+        </View>
+        <View style={{ marginTop: 20 }}>
+          <NativeText style={[styles.cardBrand]}>TOTAL TOKKENS</NativeText>
+        </View>
       </View>
     );
   };
@@ -245,7 +294,29 @@ export default class Compony extends React.Component {
   renderBoughtTokkensCard = () => {
     return (
       <View>
-        <NativeText>Bought Tokkens</NativeText>
+        <View style={[styles.cardItems]}>
+          <Icon
+            type="FontAwesome"
+            name="universal-access"
+            style={[
+              styles.cardIcon,
+              {
+                color: "#484848",
+                backgroundColor: "#EAEAEA",
+                padding: 10,
+                fontSize: 35
+              }
+            ]}
+          />
+        </View>
+        <View>
+          <NativeText style={[styles.cardMeta, { color: "#484848" }]}>
+            18
+          </NativeText>
+        </View>
+        <View style={{ marginTop: 20 }}>
+          <NativeText style={[styles.cardBrand]}>BOUGHT TOKKENS</NativeText>
+        </View>
       </View>
     );
   };
@@ -254,7 +325,24 @@ export default class Compony extends React.Component {
   renderRemainingTokkensCard = () => {
     return (
       <View>
-        <NativeText>Remaing Tokkens</NativeText>
+        <View style={[styles.cardItems]}>
+          <Icon
+            type="Foundation"
+            name="social-game-center"
+            style={[
+              styles.cardIcon,
+              { color: "#484848", backgroundColor: "#EAEAEA" }
+            ]}
+          />
+        </View>
+        <View>
+          <NativeText style={[styles.cardMeta, { color: "#484848" }]}>
+            18
+          </NativeText>
+        </View>
+        <View style={{ marginTop: 20 }}>
+          <NativeText style={[styles.cardBrand]}>REMAINING TOKKENS</NativeText>
+        </View>
       </View>
     );
   };
@@ -263,7 +351,24 @@ export default class Compony extends React.Component {
   renderNextTokkenCard = () => {
     return (
       <View>
-        <NativeText>Next Tokken</NativeText>
+        <View style={[styles.cardItems]}>
+          <Icon
+            type="Ionicons"
+            name="ios-cog"
+            style={[
+              styles.cardIcon,
+              { color: "#484848", backgroundColor: "#EAEAEA" }
+            ]}
+          />
+        </View>
+        <View>
+          <NativeText style={[styles.cardMeta, { color: "#484848" }]}>
+            18
+          </NativeText>
+        </View>
+        <View style={{ marginTop: 20 }}>
+          <NativeText style={[styles.cardBrand]}>WAITING TOKKENS</NativeText>
+        </View>
       </View>
     );
   };
@@ -271,12 +376,51 @@ export default class Compony extends React.Component {
   //= ==================End of Main methods===================//
 
   //= ==================Footer methods===================//
-  // method to render steps navigator
+
+  // method to render edit tokkens
   renderAddTokkens = () => {
-    return <View style={[styles.addTokkensContainer]} />;
+    return (
+      <View style={[styles.footerItem, { marginTop: 30 }]}>
+        <View style={styles.footerItemMeta}>
+          <NativeText style={styles.footerItemBrand}>Edit Tokkens</NativeText>
+          <TouchableOpacity onPress={this.handleFetchAdmins}>
+            <Icon
+              type="MaterialCommunityIcons"
+              name="circle-edit-outline"
+              style={styles.footerItemIcon}
+            />
+          </TouchableOpacity>
+        </View>
+        <NativeText style={styles.footerItemText}>Total:10</NativeText>
+      </View>
+    );
   };
 
-  // method to render tokken timmer
+  // method to render admins
+  renderAdmins = () => {
+    const { admins } = this.state;
+    const uri =
+      "https://facebook.github.io/react-native/docs/assets/favicon.png";
+    return (
+      <View style={[styles.footerItem, { marginTop: 10 }]}>
+        <View style={styles.footerItemMeta}>
+          <NativeText style={[styles.footerItemBrand]}>Admins</NativeText>
+          <Icon type="Entypo" name="users" style={styles.footerItemIcon} />
+        </View>
+        <View style={styles.adminsContainer}>
+          {admins.map((value, index) => (
+            <Thumbnail
+              square
+              source={{ uri: value }}
+              style={styles.adminItem}
+              key={value + index}
+            />
+          ))}
+        </View>
+      </View>
+    );
+  };
+
   // renderTokkenTimmer = () => {}
   //= ==================End of footer methods===================//
 
