@@ -1,22 +1,21 @@
 import React from "react";
 import CountdownCircle from "react-native-countdown-circle";
 import StepIndicator from "../../Components/react-native-step-indicator";
-import {
-  View,
-  AsyncStorage,
-  Button as NativeButton,
-  TouchableOpacity,
-  Text as NativeText
-} from "react-native";
+import { View, TouchableOpacity, Text as NativeText } from "react-native";
 import { Firebase } from "../../Config";
 import { Container, Content, Button, Text, Icon, Thumbnail } from "native-base";
 import { MetaModal, NumericInput } from "../../Components";
 import styles, { customStyles } from "./style";
 import Loader from "../Loader/loader";
+import { ImagePicker, Permissions, FaceDetector } from "expo";
 const setup_d = {
   company: "Lgu1AvZFW4q1pFl76Jwq",
-  date: "12/31/18",
+  bought: 30,
+  finished: 10,
+  remaining: 20,
+  waiting: 20,
   limit: 50,
+  date: "12/31/18",
   time: 5
 };
 export default class Compony extends React.Component {
@@ -24,19 +23,47 @@ export default class Compony extends React.Component {
     super(props);
     this.state = {
       loading: false,
+      companyId: "Lgu1AvZFW4q1pFl76Jwq",
       showMetaModal: false,
       meta: null,
+      setupType: "new",
+      tokkenCount_d: 0,
       tokkenCount: 0,
       tokkenTime: 0,
+      boughtTokkens: 0,
+      finishedTokkens: 0,
+      waitingTokkens: 0,
+      remainingTokkens: 0,
       tokkenSetuped: true,
-      tokkenSetup: setup_d,
-      admins: []
+      tokkenSetup_Id: "cEWiMEnTTYFaoY4q9hdN",
+      admins: [],
+      currentUserAllowed: false
     };
   }
 
-  componentDidMount() {
+  async componentDidMount() {
+    // const tokkensMeta = Firebase.fireStore.collection("tokkensMeta");
+    // const query = tokkensMeta
+    //   .where("company", "==", this.state.companyId)
+    //   .where("date", "==", new Date().toDateString());
+    // query.onSnapshot(querySnap => {
+    //   querySnap.forEach(doc => {
+    //     const data = doc.data();
+    //     this.setState({
+    //       tokkenCount_d: data.limit,
+    //       tokkenCount: data.limit,
+    //       tokkenTime: data.time,
+    //       boughtTokkens: data.bought,
+    //       remainingTokkens: data.remaining,
+    //       waitingTokkens: data.waiting,
+    //       finishedTokkens: data.finished
+    //     });
+    //   });
+    // });
     // this.handleValidateTokkenSetup();
   }
+
+  //get realtime updates
 
   //Method to validate either the tokkens are setup or not
   handleValidateTokkenSetup = () => {
@@ -70,12 +97,12 @@ export default class Compony extends React.Component {
   };
 
   //Method to setup the tokken
-  handleSetupTokken = () => {
+  handleSetupTokken = type => {
     const { tokkenCount, tokkenTime } = this.state;
     if (tokkenCount && tokkenTime) {
       this.setState({
         showMetaModal: false,
-        meta: this.renderTokkenSetupConfirmation()
+        meta: this.renderTokkenSetupConfirmation(type)
       });
       setTimeout(() => {
         this.setState({ showMetaModal: true });
@@ -83,7 +110,127 @@ export default class Compony extends React.Component {
     }
   };
 
+  //method to save the tokkens in db
+  handleSaveTokkens = async type => {
+    const { tokkenCount, companyId, tokkenTime } = this.state;
+    this.setState({ loading: true });
+    try {
+      const tokkensMeta = Firebase.fireStore.collection("tokkensMeta");
+      if (type == "new") {
+        const obj = {
+          limit: tokkenCount,
+          time: tokkenTime,
+          bought: 0,
+          remaining: tokkenCount,
+          date: new Date().toDateString(),
+          company: companyId,
+          waiting: 0,
+          finished: 0
+        };
+        const id = (await tokkensMeta.add(obj)).id;
+        this.setState({
+          tokkenSetup_Id: id,
+          showMetaModal: false,
+          meta: null,
+          loading: false
+        });
+        return;
+      }
+      this.handleEditTokkens();
+    } catch (err) {
+      this.setState({ loading: false });
+      console.log(err);
+    }
+  };
+
+  handleEditTokkens = async () => {
+    console.log("Editting tokkens man!!!");
+    const {
+      tokkenCount,
+      tokkenTime,
+      boughtTokkens,
+      waitingTokkens,
+      finishedTokkens,
+      tokkenSetup_Id,
+      companyId
+    } = this.state;
+    try {
+      const tokkensMeta = Firebase.fireStore.collection("tokkensMeta");
+      const obj = {
+        limit: tokkenCount,
+        time: tokkenTime,
+        bought: boughtTokkens,
+        remaining: tokkenCount - boughtTokkens,
+        waiting: waitingTokkens,
+        finished: finishedTokkens,
+        date: new Date().toDateString(),
+        company: companyId
+      };
+      await tokkensMeta.doc(tokkenSetup_Id).set(obj);
+      this.setState({ showMetaModal: false, meta: null, loading: false });
+      console.log("Editted id man!=>", tokkenSetup_Id);
+    } catch (err) {
+      console.log(err);
+    }
+  };
+
   //= ==================Header handles===================//
+
+  // handle to recognize user face
+  handleRecognizeUser = async () => {
+    const { userImage } = this.state;
+    try {
+      const results = await Promise.all([
+        Permissions.askAsync(Permissions.CAMERA),
+        Permissions.askAsync(Permissions.CAMERA_ROLL)
+      ]);
+      if (!results.some(({ status }) => status !== "granted")) {
+        let result = await ImagePicker.launchCameraAsync({
+          allowsEditing: true,
+          aspect: [5, 5]
+        });
+        this.setState({ showMetaModal: false, loading: true });
+        if (!result.cancelled) {
+          // this.setState({ userImage: result.uri });
+          const res = await this.handleDetectFaces(result.uri);
+          console.log("DetectedFace==>", res);
+          this.setState({
+            loading: false,
+            currentUserAllowed: res.faces.length > 0
+          });
+        }
+      }
+    } catch (err) {
+      this.setState({ loading: false });
+      console.log(err);
+    }
+  };
+  handleDetectFaces = async imageUri => {
+    const options = { mode: FaceDetector.Constants.Mode.fast };
+    return await FaceDetector.detectFacesAsync(imageUri, options);
+  };
+
+  handleValidateCurrentTokken = () => {
+    const { currentUserAllowed, boughtTokkens } = this.state;
+    if (!boughtTokkens) {
+      this.setState({
+        showMetaModal: true,
+        meta: this.renderTokkenErrorMsg()
+      });
+      return;
+    } else if (currentUserAllowed)
+      this.setState({
+        showMetaModal: true,
+        meta: this.renderCurrentStartedTokken()
+      });
+    else if (!currentUserAllowed) {
+      this.setState({
+        showMetaModal: true,
+        meta: this.renderStartCurrentTokken()
+      });
+      return;
+    }
+  };
 
   //= ==================End of Header handles===================//
 
@@ -153,7 +300,7 @@ export default class Compony extends React.Component {
   renderFooter = () => {
     return (
       <View style={styles.footer}>
-        {this.renderAddTokkens()}
+        {this.renderEditTokkens()}
         {this.renderAdmins()}
       </View>
     );
@@ -183,7 +330,7 @@ export default class Compony extends React.Component {
             name="coins"
           />
         ),
-        handle: null
+        handle: this.handleValidateCurrentTokken
       },
       {
         text: "Notifications",
@@ -239,6 +386,151 @@ export default class Compony extends React.Component {
       </View>
     );
   };
+
+  //method to render message to start the current tokken
+  renderStartCurrentTokken = () => {
+    const uri =
+      "https://facebook.github.io/react-native/docs/assets/favicon.png";
+    return (
+      <View style={[styles.startTokkenContainer]}>
+        <View style={[styles.startCurrentTokkenHeader]}>
+          <Text style={styles.metaBrand}>Allow Current Tokken User</Text>
+        </View>
+        <View style={[styles.metaItem, { justifyContent: "center" }]}>
+          <Thumbnail large source={{ uri: uri }} />
+        </View>
+        <NativeText
+          style={{
+            fontSize: 20,
+            fontWeight: "bold",
+            textAlign: "center",
+            marginBottom: 10,
+            marginTop: 5
+          }}
+        >
+          User Name
+        </NativeText>
+        <NativeText
+          style={{ fontSize: 16, color: "#757475", marginBottom: 10 }}
+        >
+          Email
+        </NativeText>
+        <NativeText
+          style={{ fontSize: 16, color: "#757475", marginBottom: 10 }}
+        >
+          Address
+        </NativeText>
+        <View style={[styles.confirmModalBtnContainer, { marginTop: 10 }]}>
+          <TouchableOpacity>
+            <Button
+              bordered
+              light
+              style={{ borderColor: "#757375" }}
+              onPress={() => console.log("Reject")}
+            >
+              <Text style={{ color: "#757375" }}>Reject</Text>
+            </Button>
+          </TouchableOpacity>
+          <TouchableOpacity>
+            <Button
+              bordered
+              light
+              style={{ borderColor: "#757375" }}
+              onPress={this.handleRecognizeUser}
+            >
+              <Text style={{ color: "#757375" }}>Allow</Text>
+            </Button>
+          </TouchableOpacity>
+        </View>
+      </View>
+    );
+  };
+
+  //Method to show the info of the current started tokken user
+  renderCurrentStartedTokken = () => {
+    return (
+      <View style={[styles.startTokkenContainer]}>
+        <View style={[styles.startCurrentTokkenHeader]}>
+          <Text style={styles.metaBrand}>Allow Current Tokken User</Text>
+        </View>
+        <View style={[styles.metaItem, { justifyContent: "center" }]}>
+          <Thumbnail large source={{ uri: uri }} />
+        </View>
+        <NativeText
+          style={{
+            fontSize: 20,
+            fontWeight: "bold",
+            textAlign: "center",
+            marginBottom: 10,
+            marginTop: 5
+          }}
+        >
+          User Name
+        </NativeText>
+        <NativeText
+          style={{ fontSize: 16, color: "#757475", marginBottom: 10 }}
+        >
+          Email
+        </NativeText>
+        <NativeText
+          style={{ fontSize: 16, color: "#757475", marginBottom: 10 }}
+        >
+          Address
+        </NativeText>
+        <View
+          style={[
+            styles.confirmModalBtnContainer,
+            { marginTop: 10, justifyContent: "flex-end" }
+          ]}
+        >
+          <TouchableOpacity>
+            <Button
+              bordered
+              light
+              style={{ borderColor: "#757375" }}
+              onPress={() => this.setState({ showMetaModal: false })}
+            >
+              <Text style={{ color: "#757375" }}>OK</Text>
+            </Button>
+          </TouchableOpacity>
+        </View>
+      </View>
+    );
+  };
+
+  //Method to show msg that no tokkens are bought yet
+  renderTokkenErrorMsg = () => {
+    return (
+      <View style={[styles.startTokkenContainer]}>
+        <View style={[styles.startCurrentTokkenHeader]}>
+          <Text style={styles.metaBrand}>Tokkens Information</Text>
+        </View>
+        <View>
+          <Text>
+            Sorry no tokkens has been bought yet, please try again later
+          </Text>
+        </View>
+        <View
+          style={[
+            styles.confirmModalBtnContainer,
+            { marginTop: 10, justifyContent: "flex-end" }
+          ]}
+        >
+          <TouchableOpacity>
+            <Button
+              bordered
+              light
+              style={{ borderColor: "#757375" }}
+              onPress={() => this.setState({ showMetaModal: false })}
+            >
+              <Text style={{ color: "#757375" }}>OK</Text>
+            </Button>
+          </TouchableOpacity>
+        </View>
+      </View>
+    );
+  };
+
   //= ==================End of Header methods===================//
 
   //= ==================Main methods===================//
@@ -280,7 +572,7 @@ export default class Compony extends React.Component {
         </View>
         <View>
           <NativeText style={[styles.cardMeta, { color: "#484848" }]}>
-            18
+            {this.state.tokkenCount_d}
           </NativeText>
         </View>
         <View style={{ marginTop: 20 }}>
@@ -311,7 +603,7 @@ export default class Compony extends React.Component {
         </View>
         <View>
           <NativeText style={[styles.cardMeta, { color: "#484848" }]}>
-            18
+            {this.state.boughtTokkens}
           </NativeText>
         </View>
         <View style={{ marginTop: 20 }}>
@@ -337,7 +629,7 @@ export default class Compony extends React.Component {
         </View>
         <View>
           <NativeText style={[styles.cardMeta, { color: "#484848" }]}>
-            18
+            {this.state.remainingTokkens}
           </NativeText>
         </View>
         <View style={{ marginTop: 20 }}>
@@ -363,7 +655,7 @@ export default class Compony extends React.Component {
         </View>
         <View>
           <NativeText style={[styles.cardMeta, { color: "#484848" }]}>
-            18
+            {this.state.waitingTokkens}
           </NativeText>
         </View>
         <View style={{ marginTop: 20 }}>
@@ -378,12 +670,19 @@ export default class Compony extends React.Component {
   //= ==================Footer methods===================//
 
   // method to render edit tokkens
-  renderAddTokkens = () => {
+  renderEditTokkens = () => {
     return (
       <View style={[styles.footerItem, { marginTop: 30 }]}>
         <View style={styles.footerItemMeta}>
           <NativeText style={styles.footerItemBrand}>Edit Tokkens</NativeText>
-          <TouchableOpacity onPress={this.handleFetchAdmins}>
+          <TouchableOpacity
+            onPress={() => {
+              this.setState({
+                showMetaModal: true,
+                meta: this.renderTokkenSetup("edit")
+              });
+            }}
+          >
             <Icon
               type="MaterialCommunityIcons"
               name="circle-edit-outline"
@@ -391,7 +690,9 @@ export default class Compony extends React.Component {
             />
           </TouchableOpacity>
         </View>
-        <NativeText style={styles.footerItemText}>Total:10</NativeText>
+        <NativeText style={styles.footerItemText}>
+          Total:{this.state.tokkenCount_d}
+        </NativeText>
       </View>
     );
   };
@@ -462,7 +763,7 @@ export default class Compony extends React.Component {
   };
 
   //Method to render the tokken setup form
-  renderTokkenSetup = () => {
+  renderTokkenSetup = (type = "new") => {
     const { tokkenCount, tokkenTime } = this.state;
     return (
       <View>
@@ -525,7 +826,7 @@ export default class Compony extends React.Component {
           style={[styles.metaItem, { justifyContent: "center", marginTop: 10 }]}
         >
           <TouchableOpacity>
-            <Button bordered dark onPress={this.handleSetupTokken}>
+            <Button bordered dark onPress={() => this.handleSetupTokken(type)}>
               <Text>Setup</Text>
             </Button>
           </TouchableOpacity>
@@ -534,7 +835,7 @@ export default class Compony extends React.Component {
     );
   };
 
-  renderTokkenSetupConfirmation = () => {
+  renderTokkenSetupConfirmation = (type = "new") => {
     return (
       <View>
         <View style={{ marginBottom: 15 }}>
@@ -552,7 +853,7 @@ export default class Compony extends React.Component {
               light
               style={styles.confirmModalBtn}
               onPress={() => {
-                this.setState({ meta: this.renderTokkenSetup() });
+                this.setState({ meta: this.renderTokkenSetup(type) });
               }}
             >
               <Text style={{ color: "yellow" }}> NO </Text>
@@ -562,9 +863,9 @@ export default class Compony extends React.Component {
             <Button
               light
               style={styles.confirmModalBtn}
-              onPress={() =>
-                this.setState({ tokkenSetuped: true, showMetaModal: false })
-              }
+              onPress={() => {
+                this.handleSaveTokkens(type);
+              }}
             >
               <Text style={{ color: "red" }}> YES </Text>
             </Button>

@@ -36,6 +36,14 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     alignItems: "center"
   },
+  startTokkenContainer: { minWidth: 300 },
+  startCurrentTokkenHeader:{
+    marginBottom: 5,
+    paddingBottom: 10,
+    borderBottomWidth: 1,
+    borderBottomColor: "#DEDEDF",
+    borderStyle: "solid"
+  },
   main: {
     display: "flex",
     flexDirection: "row",
@@ -104,7 +112,7 @@ const styles = StyleSheet.create({
     zIndex: 0,
     backgroundColor: "#131212ed",
     top: -8,
-    minWidth: Dimensions.get('screen').width,
+    minWidth: Dimensions.get("screen").width,
     minHeight: 300
   },
   footerItem: {
@@ -138,21 +146,21 @@ const styles = StyleSheet.create({
     paddingLeft: 8
   },
   adminsContainer: {
-    marginTop:8,
+    marginTop: 8,
     display: "flex",
     justifyContent: "flex-start",
     flexWrap: "wrap",
     flexDirection: "row"
   },
-  adminItem:{
-    marginLeft:5,
-    marginRight:5,
-    borderRadius:8,
+  adminItem: {
+    marginLeft: 5,
+    marginRight: 5,
+    borderRadius: 8,
     elevation: 10,
     shadowColor: "black",
     shadowOffset: { width: 0, height: 3 },
     shadowRadius: 10,
-    shadowOpacity: 5,
+    shadowOpacity: 5
   },
   borderTopLightGrey: {
     borderTopColor: "#ccc",

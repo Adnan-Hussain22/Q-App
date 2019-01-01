@@ -97,7 +97,7 @@ export default class App extends React.Component {
   handleCompanyClick = async () => {
     //  this.props.navigation.navigate('CompanyData');
     this.setState({ loading: true });
-    let companies = [ ];
+    let companies = [];
     // try {
     //   const { snap, status, err } = await this.handleCompanyValidation()
     //   if (snap) {
@@ -126,11 +126,16 @@ export default class App extends React.Component {
     });
   };
 
+  //= =======================END OF COMPANY HANDLES===========================//
+
+  //= =======================ALL HANDLES RELATED TO USER=====================//
+
+  
   handleUserClick = () => {
     this.props.navigation.navigate("User");
   };
 
-  //= =======================END OF COMPANY HANDLES===========================//
+  //= =======================END OF USER HANDLES===========================//
 
   // Check if there is no activity than render the view else render loader
   render() {

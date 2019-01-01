@@ -11,15 +11,15 @@ const StackNavigation = createStackNavigator(
     // Companies: {
     //   screen: Screens.Companies
     // },
-    Company: {
-      screen: Screens.Company
-    },
-    CompanyData: {
-      screen: Screens.CompanyData
-    },
-    // User: {
-    //   screen: Screens.User
-    // }
+    // Company: {
+    //   screen: Screens.Company
+    // },
+    // CompanyData: {
+    //   screen: Screens.CompanyData
+    // },
+    User: {
+      screen: Screens.User
+    }
   },
   {
     headerMode: 'none',

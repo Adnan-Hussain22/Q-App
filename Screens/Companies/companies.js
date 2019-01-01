@@ -60,12 +60,22 @@ export default class App extends React.Component {
     try {
       const { res, err, status } = await this.handleValidateTodayTokken(value);
       if (res) {
-        let data = null
+        let data = null;
         res.forEach(doc => {
           data = doc.data();
         });
-        this.props.navigation.navigate('Company',{status:true,data});
+        this.props.navigation.navigate("Company", {
+          status: true,
+          data,
+          companyId: value.id
+        });
+        return;
       }
+      this.props.navigation.navigate("Company", {
+        status: false,
+        data: null,
+        companyId: value
+      });
     } catch (err) {
       console.log(err);
     }
