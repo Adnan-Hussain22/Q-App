@@ -245,6 +245,7 @@ export default class CompanyData extends React.Component {
       const metaId = (await companiesMeta.add(metaObj)).id
       const dataObj = {
         name: textCompany,
+        lowerCaseName:textCompany.toLowerCase(),
         address:company.location.formattedAddress,
         since: date,
         timing,
