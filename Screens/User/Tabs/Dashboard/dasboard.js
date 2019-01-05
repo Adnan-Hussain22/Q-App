@@ -18,19 +18,61 @@ export default class Dashboard extends React.Component {
       loading: true,
       authProfile: props.userProfile,
       boughtTokkens: null,
+      waitingTokkens: 0,
+      doneTokkens: 0,
       currentAuth: null
     };
   }
 
   async componentDidMount() {
     const currentAuth = JSON.parse(await AsyncStorage.getItem("authUser"));
-    // const boughtTokkens = await this.handleValidateTokkens(currentAuth);
-    this.setState({ loading: false, currentAuth });
+    const boughtTokkens = await this.handleValidateTokkens(currentAuth);
+    this.setState({ loading: false, currentAuth, boughtTokkens }, () =>
+      this.handleFetchStatistics()
+    );
   }
 
   static getDerivedStateFromProps(props, state) {
     return { authProfile: props.userProfile };
   }
+
+  handleFetchStatistics = () => {
+    this.handleFetchBoughtTokkens();
+  };
+
+  //fetch realtime updates for bought tokkens
+  handleFetchBoughtTokkens = () => {
+    const { currentAuth } = this.state;
+    const userTokkensMetaRef = Firebase.fireStore.collection("userTokkensMeta");
+    const query = userTokkensMetaRef.where("uid", "==", currentAuth.uid);
+    query.onSnapshot(snap => {
+      this.setState({ boughtTokkens: snap.size });
+    });
+  };
+
+  //fetch realtime updates for waiting tokkens
+  handleFetchWaitingTokkens = () => {
+    const { currentAuth } = this.state;
+    const userTokkensMetaRef = Firebase.fireStore.collection("userTokkensMeta");
+    const query = userTokkensMetaRef
+      .where("uid", "==", currentAuth.uid)
+      .where("status", "==", "waiting");
+    query.onSnapshot(snap => {
+      this.setState({ waitingTokkens: snap.size });
+    });
+  };
+
+  //fetch realtime updates for done tokkens
+  handleFetchDoneTokkens = () => {
+    const { currentAuth } = this.state;
+    const userTokkensMetaRef = Firebase.fireStore.collection("userTokkensMeta");
+    const query = userTokkensMetaRef
+      .where("uid", "==", currentAuth.uid)
+      .where("status", "==", "done");
+    query.onSnapshot(snap => {
+      this.setState({ doneTokkens: snap.size });
+    });
+  };
 
   //= ==================Header handles===================//
 
@@ -53,14 +95,7 @@ export default class Dashboard extends React.Component {
       let boughtTokkens = null;
       const query = userTokkensMetaRef.where("uid", "==", currentAuth.uid);
       const snap = await query.get();
-      if (snap.size) {
-        let tokkensData = [];
-        snap.forEach(doc => {
-          const data = doc.data();
-          tokkensData = tokkensData.concat(data);
-        });
-        boughtTokkens = { tokkensData, uid: currentAuth.uid };
-      }
+      if (snap.size) boughtTokkens = snap.size;
       return boughtTokkens;
     } catch (err) {
       Alert.alert(
@@ -81,7 +116,7 @@ export default class Dashboard extends React.Component {
 
   render() {
     const { loading, authProfile, boughtTokkens } = this.state;
-    console.log("Dashboard authProfile ==>", authProfile);
+    console.log("Dashboard boughtTokkens ==>", boughtTokkens);
     if (loading)
       return (
         <View style={styles.loaderContainer}>
@@ -112,17 +147,17 @@ export default class Dashboard extends React.Component {
   };
 
   renderMain = () => {
-    const { boughtTokkens } = this.state;
+    const { boughtTokkens, waitingTokkens, doneTokkens } = this.state;
     return (
       <View style={styles.main}>
         {this.renderCards(
-          this.renderCard(boughtTokkens.bought, "Bought Tokkens", "#0C8040")
+          this.renderCard(boughtTokkens, "Bought Tokkens", "#52A5DD")
         )}
         {this.renderCards(
-          this.renderCard(boughtTokkens.waiting, "Waiting Tokkens", "#EC3646")
+          this.renderCard(waitingTokkens, "Waiting Tokkens", "#EC3646")
         )}
         {this.renderCards(
-          this.renderCard(boughtTokkens.done, "Done Tokkens", "#52A5DD")
+          this.renderCard(doneTokkens, "Done Tokkens", "#0C8040")
         )}
       </View>
     );

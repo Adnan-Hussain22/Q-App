@@ -1,4 +1,4 @@
-import { StyleSheet,Dimensions } from "react-native";
+import { StyleSheet, Dimensions } from "react-native";
 const styles = StyleSheet.create({
   header: {
     marginTop: 15
@@ -28,29 +28,50 @@ const styles = StyleSheet.create({
     width: 60,
     height: 60,
     borderRadius: 30,
-    position: 'absolute',
+    position: "absolute",
     bottom: 10,
     right: 10
   },
   metaCompanyBrand: {
-    textAlign: 'center',
+    textAlign: "center",
     fontSize: 20,
-    fontWeight: 'bold'
+    fontWeight: "bold"
   },
   metaCompanyItem: {
-    display: 'flex',
-    justifyContent: 'space-between',
-    flexDirection: 'row'
+    display: "flex",
+    justifyContent: "space-between",
+    flexDirection: "row"
   },
   metaCompanyItemMeta: {
-    width: Dimensions.get('screen').width - 75
+    width: Dimensions.get("screen").width - 75
   },
   confirmModalBtn: {
     padding: 10,
-    backgroundColor: 'transparent',
-    borderColor: 'transparent',
+    backgroundColor: "transparent",
+    borderColor: "transparent",
     elevation: 0,
-    shadowColor: 'transparent'
+    shadowColor: "transparent"
+  },
+  profileErrBrand: {
+    textAlign: "center",
+    fontSize: 18,
+    fontWeight: "bold",
+    marginTop: 20,
+    marginBottom: 15
+  },
+  profileErrText: {
+    marginTop: 20,
+    textAlign: "center",
+    fontSize: 14,
+    fontWeight: "bold",
+    marginBottom: 15,
+    color: "#2E2E2E"
+  },
+  profileErrActionCont: {
+    marginTop: 15,
+    display: "flex",
+    justifyContent: "center",
+    flexDirection: "row"
   }
 });
 

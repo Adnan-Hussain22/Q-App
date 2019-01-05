@@ -49,8 +49,8 @@ export default class Profile extends React.Component {
     }
   }
 
-  static getDerivedStateFromProp(props, state) {
-    return { ...state, authProfile: props.authProfile };
+  static getDerivedStateFromProps(props, state) {
+    return { authProfile: props.authProfile };
   }
 
   //method to conver uri into blob
@@ -127,8 +127,8 @@ export default class Profile extends React.Component {
           phoneNo
         };
         await usersRef.doc(currentAuth.uid).set(obj);
-        this.props.handleFetchProfile(obj);
         this.setState({ loading: false });
+        this.props.handleFetchProfile(obj);
         setTimeout(
           () =>
             Alert.alert(

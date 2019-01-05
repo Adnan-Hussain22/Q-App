@@ -23,9 +23,8 @@ export default class User extends React.Component {
     const currentAuth = JSON.parse(await AsyncStorage.getItem("authUser"));
     // console.log(this.props.navigation.state.params);
     try {
-      // const authProfile = await this.handleValidateProfile(currentAuth);
-      // , authProfile
-      this.setState({ loading: false, currentAuth });
+      const authProfile = await this.handleValidateProfile(currentAuth);
+      this.setState({ loading: false, currentAuth,authProfile });
     } catch (err) {
       console.log(err);
     }

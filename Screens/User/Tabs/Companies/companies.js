@@ -23,46 +23,16 @@ import { Firebase } from "../../../../Config";
 import { MetaModal } from "../../../../Components";
 import { FaceDetector, Permissions, ImagePicker } from "expo";
 const { Marker } = MapView;
-const selectedCompany_d = {
-  address: ["Creek Club Bakery, Phase VIII, DHA", "کراچی", "پاکستان"],
-  admins: ["adnanrajput22@gmail.com", "adnanrajput42@gmail.com"],
-  certificates: [
-    "https://firebasestorage.googleapis.com/v0/b/qapp-ca040.appspot.com/o/companyCertificates%2Fa9f942ea-9351-4157-b7e5-dbad49b9edc7.jpg?alt=media&token=25d0a999-3b2f-4e62-98a4-1660e1236861",
-    "https://firebasestorage.googleapis.com/v0/b/qapp-ca040.appspot.com/o/companyCertificates%2Fdabcd738-071f-42df-8da8-d78e77e0161f.jpg?alt=media&token=cf960777-e23e-4e5c-b1e3-035adfcaba04",
-    "https://firebasestorage.googleapis.com/v0/b/qapp-ca040.appspot.com/o/companyCertificates%2F11020cd1-3741-49ab-8dba-1643525141ac.jpg?alt=media&token=e062109b-f3c8-41c7-95c3-5bf732d57698"
-  ],
-  coords: {
-    latitude: 24.8481905,
-    longitude: 67.0277179
-  },
-  id: "Lgu1AvZFW4q1pFl76Jwq",
-  lowerCaseName: "tech native",
-  name: "Tech Native",
-  registeredBy: "adnanrajput42@gmail.com",
-  since: 1537556400000,
-  timing: {
-    from: {
-      amPM: "AM",
-      hour: "08",
-      minute: "00"
-    },
-    to: {
-      amPM: "PM",
-      hour: "11",
-      minute: "00"
-    }
-  }
-};
 export default class Companies extends React.Component {
   constructor(props) {
     super(props);
     this.state = {
       loadingCompanies: false,
-      companies: [selectedCompany_d],
+      companies: [],
       mapModal: false,
       coords: null,
       searchText: "",
-      selectedCompany: selectedCompany_d,
+      selectedCompany: null,
       showMetaModal: false,
       meta: null,
       authProfile: props.authProfile,
@@ -110,24 +80,54 @@ export default class Companies extends React.Component {
     }
   };
 
+  renderProfileErr = () => {
+    return (
+      <View>
+        <Text style={styles.profileErrBrand}>Profile not setup :(</Text>
+        <Text style={styles.profileErrText}>Please setup your profile</Text>
+        <TouchableOpacity>
+          <Button
+            block
+            dark
+            bordered
+            style={{ marginLeft: 20, marginRight: 20 }}
+            onPress={() => this.props.handleChangePage(2)}
+          >
+            <Text>Setup</Text>
+          </Button>
+        </TouchableOpacity>
+      </View>
+    );
+  };
+
   //= ==================End of Header handles===================//
 
   //= ==================Main handles===================//
 
   handleCompanySelected = async value => {
     this.setState({ loadingCompanies: true });
-    // const { boughtTokkens } = this.state;
-    // let isTodayTokkensBought = boughtTokkens
-    //   ? boughtTokkens
-    //   : await this.props.handleValidateTokkens();
-    // if (isTodayTokkensBought) return;
-    // console.log("not bought man!");
-    this.setState({
-      selectedCompany: value,
-      showMetaModal: true,
-      meta: this.renderCompanyMeta(),
-      loadingCompanies: false
-    });
+    const { boughtTokkens } = this.state;
+    let isTodayTokkensBought = boughtTokkens
+      ? boughtTokkens
+      : await this.props.handleValidateTokkens();
+    if (isTodayTokkensBought) {
+      Alert.alert(
+        "Unable to buy a tokken!!",
+        "Today's tokken is already bought, please try later on tomorrow",
+        [{ text: "OK", onPress: () => console.log("OK Pressed") }],
+        { cancelable: false }
+      );
+      return;
+    }
+    console.log("not bought man!");
+    this.setState(
+      {
+        selectedCompany: value,
+        loadingCompanies: false
+      },
+      () =>
+        this.setState({ meta: this.renderCompanyMeta(), showMetaModal: true })
+    );
   };
 
   //handle to take the snap of the user
@@ -232,7 +232,7 @@ export default class Companies extends React.Component {
     const userTokkensMetaRef = Firebase.fireStore.collection("userTokkensMeta");
     try {
       const metaObj = {
-        user:authProfile,
+        user: authProfile,
         uid: authProfile.uid,
         date: new Date().toDateString(),
         company: selectedCompany,
@@ -260,6 +260,8 @@ export default class Companies extends React.Component {
   //= ==================End of Main handles===================//
 
   render() {
+    const { authProfile } = this.state;
+    if (!authProfile) return this.renderProfileErr();
     return this.renderView();
   }
 
