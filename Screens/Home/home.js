@@ -98,26 +98,25 @@ export default class App extends React.Component {
     //  this.props.navigation.navigate('CompanyData');
     this.setState({ loading: true });
     let companies = [];
-    // try {
-    //   const { snap, status, err } = await this.handleCompanyValidation()
-    //   if (snap) {
-    //     snap.forEach(res => {
-    //       const data = res.data()
-    //       companies = companies.concat(data)
-    //     })
-    //     // console.log('companies==>',companies)
-    //     this.setState({ loading: false })
-    //     this.setState({ companies }, () => {
-    //       this.props.navigation.navigate('Companies', { companies })
-    //     })
-    //   } else {
-    //     this.setState({
-    //       loading: false,
-    //       showModal: true,
-    //       meta: this.renderCompanyNonValidated()
-    //     })
-    //   }
-    // } catch (err) {}
+    try {
+      const { snap, status, err } = await this.handleCompanyValidation();
+      if (snap) {
+        snap.forEach(res => {
+          const data = res.data();
+          companies = companies.concat(data);
+        });
+        // console.log('companies==>',companies)
+        this.setState({ loading: false, companies }, () => {
+          this.props.navigation.navigate("Companies", { companies });
+        });
+      } else {
+        this.setState({
+          loading: false,
+          showModal: true,
+          meta: this.renderCompanyNonValidated()
+        });
+      }
+    } catch (err) {}
   };
 
   handleRegisterCompany = () => {
@@ -130,7 +129,6 @@ export default class App extends React.Component {
 
   //= =======================ALL HANDLES RELATED TO USER=====================//
 
-  
   handleUserClick = () => {
     this.props.navigation.navigate("User");
   };

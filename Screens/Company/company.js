@@ -1,90 +1,167 @@
 import React from "react";
-import CountdownCircle from "react-native-countdown-circle";
+import _ from "lodash";
+import CountdownCircle from "../../Components/react-native-countdown-circle";
 import StepIndicator from "../../Components/react-native-step-indicator";
-import { View, TouchableOpacity, Text as NativeText } from "react-native";
+import {
+  View,
+  TouchableOpacity,
+  Text as NativeText,
+  Alert
+} from "react-native";
 import { Firebase } from "../../Config";
-import { Container, Content, Button, Text, Icon, Thumbnail } from "native-base";
+import {
+  Container,
+  Content,
+  Button,
+  Text,
+  Icon,
+  Thumbnail,
+  Radio
+} from "native-base";
 import { MetaModal, NumericInput } from "../../Components";
 import styles, { customStyles } from "./style";
 import Loader from "../Loader/loader";
 import { ImagePicker, Permissions, FaceDetector } from "expo";
-const setup_d = {
-  company: "Lgu1AvZFW4q1pFl76Jwq",
-  bought: 30,
-  finished: 10,
-  remaining: 20,
-  waiting: 20,
-  limit: 50,
-  date: "12/31/18",
-  time: 5
-};
 export default class Compony extends React.Component {
   constructor(props) {
     super(props);
     this.state = {
       loading: false,
-      companyId: "Lgu1AvZFW4q1pFl76Jwq",
+      companyId: "",
       showMetaModal: false,
+      startTokkenTimer: false,
+      currentStartedTokkenData: null,
+      tokkenTimer: null,
       meta: null,
       setupType: "new",
       tokkenCount_d: 0,
       tokkenCount: 0,
       tokkenTime: 0,
-      boughtTokkens: 0,
-      finishedTokkens: 0,
-      waitingTokkens: 0,
-      remainingTokkens: 0,
-      tokkenSetuped: true,
-      tokkenSetup_Id: "cEWiMEnTTYFaoY4q9hdN",
+      tokkenSetuped: false,
+      tokkenSetup_Id: "",
+      companyData: null,
+      companyTodayTokkenData: null,
       admins: [],
-      currentUserAllowed: false
+      tokkenUsers: null,
+      currentTokkenUser: false,
+      currentUserAllowed: false,
+      autoStartTokken: false
     };
   }
 
   async componentDidMount() {
-    // const tokkensMeta = Firebase.fireStore.collection("tokkensMeta");
-    // const query = tokkensMeta
-    //   .where("company", "==", this.state.companyId)
-    //   .where("date", "==", new Date().toDateString());
-    // query.onSnapshot(querySnap => {
-    //   querySnap.forEach(doc => {
-    //     const data = doc.data();
-    //     this.setState({
-    //       tokkenCount_d: data.limit,
-    //       tokkenCount: data.limit,
-    //       tokkenTime: data.time,
-    //       boughtTokkens: data.bought,
-    //       remainingTokkens: data.remaining,
-    //       waitingTokkens: data.waiting,
-    //       finishedTokkens: data.finished
-    //     });
-    //   });
-    // });
-    // this.handleValidateTokkenSetup();
+    await this.handleValidateTokkenSetup();
+    this.handleFetchTokkensMeta();
+    this.handleFetchTokkenUsers();
   }
 
-  //get realtime updates
+  //Handle to get the tokkens realtime updates
+  handleFetchTokkensMeta = async () => {
+    const { companyId } = this.state;
+    const tokkensMetaRef = Firebase.fireStore.collection("tokkensMeta");
+    try {
+      const query = tokkensMetaRef
+        .where("companyId", "==", companyId)
+        .where("date", "==", new Date().toDateString());
+      query.onSnapshot(snap => {
+        snap.forEach(doc => {
+          const data = doc.data();
+          console.log("handleFetchTokkensMeta onSnapshot==>", data);
+          this.setState({
+            companyTodayTokkenData: data,
+            tokkenCount: data.limit,
+            tokkenTime: data.time,
+            autoStartTokken: data.autoStartTokken
+          });
+        });
+      });
+    } catch (err) {
+      console.log(err);
+    }
+  };
 
   //Method to validate either the tokkens are setup or not
   handleValidateTokkenSetup = () => {
     if (this.props.navigation.state.params) {
-      const { data, status } = this.props.navigation.state.params;
+      const {
+        companyData,
+        status,
+        companyId,
+        tokkenSetupId
+      } = this.props.navigation.state.params;
+      console.log("handleValidateTokkenSetup tokkenSetupId==>", tokkenSetupId);
       if (status) {
-        console.log(data);
         this.setState({
           loading: false,
           tokkenSetuped: true,
-          tokkenSetup: data
+          companyData,
+          companyId,
+          tokkenSetup_Id: tokkenSetupId
         });
         return;
       }
-      this.setState({ loading: false, tokkenSetuped: false });
+      this.setState({
+        companyData,
+        loading: false,
+        tokkenSetuped: false,
+        companyId
+      });
     }
   };
 
+  //handle to fetch the current tokken user at realtime
+  handleFetchTokkenUsers = async () => {
+    const { companyId, companyData } = this.state;
+    // const companyTiming = companyData.timing.from;
+    // const userTiming = new Date(
+    //   new Date().setHours(
+    //     companyTiming.amPM == "AM"
+    //       ? +companyTiming.hour
+    //       : +companyTiming.hour + 12,
+    //     +companyTiming.minute,
+    //     0
+    //   )
+    // )
+    //   .toLocaleTimeString()
+    //   .substr(0, 8);
+    const userTokkensMeta = Firebase.fireStore.collection("userTokkensMeta");
+    // const snap = await userTokkensMeta.get();
+    // snap.forEach(doc=>{
+    //   const data = doc.data();
+    //   console.log('date==>',new Date().toDateString());
+    //   console.log('data.date==>',data.date);
+    //   console.log('date === data.date',new Date().toDateString() === data.date);
+    //   console.log('companyId==>',companyId);
+    //   console.log('data.companyId==>',data.company.id);
+    //   console.log('companyId === data.companyId ==>',companyId === data.company.id);
+    //   console.log('data.status ==>',data.status === "not set");
+    //   console.log('data.status === not set ==>',data.status);
+    // })
+    const query = userTokkensMeta
+      .where("date", "==", new Date().toDateString())
+      .where("company.id", "==", companyId)
+      .where("status", "==", "not set");
+    query.onSnapshot(snap => {
+      let tokkenUsers = [];
+      snap.forEach(doc => {
+        const data = doc.data();
+        tokkenUsers = tokkenUsers.concat({ ...data, docId: doc.id });
+      });
+      const currentTokkenUser = this.handleFetchRecentTokkenUser(tokkenUsers);
+      this.setState({ currentTokkenUser });
+    });
+  };
+
+  //handle get the recent tokken user
+  handleFetchRecentTokkenUser = tokkenUsers =>
+    _.orderBy(
+      tokkenUsers,
+      [e => e.timing.hours, e => e.timing.minutes, e => e.timing.seconds],
+      ["asc", "asc", "asc"]
+    )[0];
+
   // Handle awake when the current tokken timmer is elapsed
   handleTimeElapsed(secondsElapsed, totalSeconds) {
-    console.log(secondsElapsed, totalSeconds);
     if (totalSeconds > 0) return totalSeconds - secondsElapsed;
     return 0;
   }
@@ -123,13 +200,14 @@ export default class Compony extends React.Component {
           bought: 0,
           remaining: tokkenCount,
           date: new Date().toDateString(),
-          company: companyId,
+          companyId,
           waiting: 0,
           finished: 0
         };
         const id = (await tokkensMeta.add(obj)).id;
         this.setState({
           tokkenSetup_Id: id,
+          tokkenSetuped: true,
           showMetaModal: false,
           meta: null,
           loading: false
@@ -148,27 +226,21 @@ export default class Compony extends React.Component {
     const {
       tokkenCount,
       tokkenTime,
-      boughtTokkens,
-      waitingTokkens,
-      finishedTokkens,
-      tokkenSetup_Id,
-      companyId
+      companyTodayTokkenData,
+      tokkenSetup_Id
     } = this.state;
     try {
       const tokkensMeta = Firebase.fireStore.collection("tokkensMeta");
       const obj = {
+        ...companyTodayTokkenData,
         limit: tokkenCount,
         time: tokkenTime,
-        bought: boughtTokkens,
-        remaining: tokkenCount - boughtTokkens,
-        waiting: waitingTokkens,
-        finished: finishedTokkens,
-        date: new Date().toDateString(),
-        company: companyId
+        remaining: tokkenCount - companyTodayTokkenData.bought
       };
       await tokkensMeta.doc(tokkenSetup_Id).set(obj);
+      console.log("Editting the obj ==>", obj);
       this.setState({ showMetaModal: false, meta: null, loading: false });
-      console.log("Editted id man!=>", tokkenSetup_Id);
+      // console.log("Editted id man!=>", tokkenSetup_Id);
     } catch (err) {
       console.log(err);
     }
@@ -189,15 +261,19 @@ export default class Compony extends React.Component {
           allowsEditing: true,
           aspect: [5, 5]
         });
-        this.setState({ showMetaModal: false, loading: true });
         if (!result.cancelled) {
-          // this.setState({ userImage: result.uri });
+          this.setState({ showMetaModal: false, loading: true });
           const res = await this.handleDetectFaces(result.uri);
-          console.log("DetectedFace==>", res);
-          this.setState({
-            loading: false,
-            currentUserAllowed: res.faces.length > 0
-          });
+          if (!res.faces.length) {
+            this.setState({
+              loading: false,
+              meta: this.renderFaceRecongnizationErrorMsg(),
+              showMetaModal: true
+            });
+            return;
+          }
+          this.setState({ loading: false });
+          this.handleAllowCurrentTokkenUser();
         }
       }
     } catch (err) {
@@ -210,26 +286,150 @@ export default class Compony extends React.Component {
     return await FaceDetector.detectFacesAsync(imageUri, options);
   };
 
-  handleValidateCurrentTokken = () => {
-    const { currentUserAllowed, boughtTokkens } = this.state;
-    if (!boughtTokkens) {
+  //handle to validate current tokken status
+  //status; either the today tokkens are setup, any current tokken user etc
+  handleValidateCurrentTokken = async () => {
+    const {
+      currentUserAllowed,
+      companyTodayTokkenData,
+      currentTokkenUser,
+      startTokkenTimer,
+      tokkenTimer
+    } = this.state;
+    try {
+      if (!companyTodayTokkenData) {
+        this.setState({
+          showMetaModal: true,
+          meta: this.renderTokkenErrorMsg()
+        });
+        return;
+      }
+      if (!currentTokkenUser) {
+        this.setState({
+          showMetaModal: true,
+          meta: this.renderCurrentTokkenUserErrorMsg()
+        });
+        return;
+      }
+      if (this.state.currentStartedTokkenData) {
+        Alert.alert(
+          "Warning",
+          "Cannot start a new tokken, already a tokken is in progress",
+          [
+            {
+              text: "Ok",
+              onPress: () => console.log("Cannot start a new tokken Ok")
+            }
+          ]
+        );
+      }
+      this.setState({ loading: true });
+      let currentTokkenUserData = this.state.currentTokkenUserData;
+      if (!currentTokkenUserData)
+        currentTokkenUserData = await this.handleFetchCurrentTokkenUserData();
       this.setState({
+        loading: false,
         showMetaModal: true,
-        meta: this.renderTokkenErrorMsg()
+        currentTokkenUserData,
+        meta: this.renderStartCurrentTokken(currentTokkenUserData)
       });
-      return;
-    } else if (currentUserAllowed)
-      this.setState({
-        showMetaModal: true,
-        meta: this.renderCurrentStartedTokken()
-      });
-    else if (!currentUserAllowed) {
-      this.setState({
-        showMetaModal: true,
-        meta: this.renderStartCurrentTokken()
-      });
-      return;
+      // if (!currentUserAllowed) {
+    } catch (err) {
+      console.log(err);
     }
+
+    //   return;
+    // }
+    // if (currentUserAllowed)
+    //   this.setState({
+    //     showMetaModal: true,
+    //     meta: this.renderCurrentStartedTokken()
+    //   });
+  };
+
+  //handle to fetch the current tokken user data
+  handleFetchCurrentTokkenUserData = async () => {
+    try {
+      const { currentTokkenUser } = this.state;
+      const usersRef = Firebase.fireStore.collection("users");
+      const currentTokkenUserDoc = await usersRef
+        .doc(currentTokkenUser.uid)
+        .get();
+      if (currentTokkenUserDoc.exists) {
+        return currentTokkenUserDoc.data();
+      }
+      return null;
+    } catch (err) {
+      console.log(err);
+      return null;
+    }
+  };
+
+  //show the alert confirmation to reject the current tokken user
+  handleRejectCurrentTokkenConfirmation = () => {
+    Alert.alert(
+      "Rejection Confirmation",
+      "Are you sure you want to reject the current tokken user ?",
+      [
+        { text: "YES", onPress: this.handleRejectCurrentTokken },
+        { text: "NO", onPress: () => console.log("No dont Reject") }
+      ]
+    );
+  };
+
+  //handle to reject the current tokken
+  handleRejectCurrentTokken = async () => {
+    const { currentTokkenUser } = this.state;
+    console.log("Rejecting " + currentTokkenUser.docId);
+    this.setState({ loading: true, meta: null, showMetaModal: false });
+    try {
+      const usersTokkensMeta = Firebase.fireStore.collection("userTokkensMeta");
+      await usersTokkensMeta
+        .doc(currentTokkenUser.docId)
+        .update({ status: "rejected" });
+      this.setState({ loading: false });
+    } catch (err) {
+      console.log(err);
+    }
+  };
+
+  //handle to allow the current tokken user and start the timmer for it
+  handleAllowCurrentTokkenUser = async () => {
+    const { companyTodayTokkenData, currentTokkenUser } = this.state;
+    console.log("Allowing==>", currentTokkenUser.docId);
+    this.setState({ loading: true });
+    try {
+      const tokkenTimer = companyTodayTokkenData.time * 60;
+      const usersTokkensMeta = Firebase.fireStore.collection("userTokkensMeta");
+      await usersTokkensMeta
+        .doc(currentTokkenUser.docId)
+        .update({ status: "started" });
+      this.setState({
+        loading: false,
+        startTokkenTimer: true,
+        tokkenTimer,
+        currentStartedTokkenData: currentTokkenUser
+      });
+    } catch (err) {
+      console.log(err);
+    }
+  };
+
+  handleOnTokkenTimeElapsed = async () => {
+    const { currentStartedTokkenData } = this.state;
+    try {
+      this.setState({ loading: true });
+      const usersTokkensMeta = Firebase.fireStore.collection("userTokkensMeta");
+      await usersTokkensMeta
+        .doc(currentStartedTokkenData.docId)
+        .update({ status: "done" });
+      this.setState({
+        startTokkenTimer: false,
+        tokkenTimer: null,
+        loading: false,
+        currentStartedTokkenData: null
+      });
+    } catch (err) {}
   };
 
   //= ==================End of Header handles===================//
@@ -267,7 +467,7 @@ export default class Compony extends React.Component {
             handleOnCloseModal={() => this.setState({ showMetaModal: false })}
           />
           <NativeText style={styles.brand}>WELCOME</NativeText>
-          {!tokkenSetuped && <View>{this.renderTokkenSetupMsg()}</View>}
+          {!tokkenSetuped && this.renderTokkenSetupMsg()}
           {tokkenSetuped && this.renderView()}
         </Content>
       </Container>
@@ -309,6 +509,7 @@ export default class Compony extends React.Component {
   //= ==================Header methods===================//
   // method to render steps navigator
   renderStepsIndicator = () => {
+    const { currentTokkenUser } = this.state;
     const labels = [
       {
         text: "Date:" + new Date().toLocaleDateString(),
@@ -323,9 +524,14 @@ export default class Compony extends React.Component {
       },
       {
         text: "Current Tokken",
+        textStyle: currentTokkenUser ? styles.currentTokkenActiveText : null,
         icon: (
           <Icon
-            style={{ color: "white" }}
+            style={[
+              currentTokkenUser
+                ? styles.currentTokkenActiveIcon
+                : { color: "white" }
+            ]}
             type="MaterialCommunityIcons"
             name="coins"
           />
@@ -360,18 +566,27 @@ export default class Compony extends React.Component {
 
   // method to render tokken timmer
   renderTokkenTimmer = () => {
-    const { headerElementsSize } = this.state;
+    const {
+      headerElementsSize,
+      startTokkenTimer,
+      companyTodayTokkenData,
+      tokkenTimer
+    } = this.state;
     return (
       <View style={[styles.headerElements]}>
         <View style={styles.tokkenTimmer}>
           <CountdownCircle
-            seconds={0}
+            seconds={
+              startTokkenTimer && companyTodayTokkenData && tokkenTimer
+                ? tokkenTimer
+                : 0
+            }
             radius={headerElementsSize ? headerElementsSize.width / 3 - 50 : 90}
             borderWidth={8}
             color="#ff003f"
             bgColor="#fff"
             textStyle={{ fontSize: 20 }}
-            onTimeElapsed={() => console.log("Elapsed!")}
+            onTimeElapsed={this.handleOnTokkenTimeElapsed}
             updateText={this.handleTimeElapsed}
           />
         </View>
@@ -388,7 +603,7 @@ export default class Compony extends React.Component {
   };
 
   //method to render message to start the current tokken
-  renderStartCurrentTokken = () => {
+  renderStartCurrentTokken = currentTokkenUserData => {
     const uri =
       "https://facebook.github.io/react-native/docs/assets/favicon.png";
     return (
@@ -397,7 +612,14 @@ export default class Compony extends React.Component {
           <Text style={styles.metaBrand}>Allow Current Tokken User</Text>
         </View>
         <View style={[styles.metaItem, { justifyContent: "center" }]}>
-          <Thumbnail large source={{ uri: uri }} />
+          <Thumbnail
+            large
+            source={{
+              uri: currentTokkenUserData.image
+                ? currentTokkenUserData.image
+                : uri
+            }}
+          />
         </View>
         <NativeText
           style={{
@@ -408,17 +630,17 @@ export default class Compony extends React.Component {
             marginTop: 5
           }}
         >
-          User Name
+          {currentTokkenUserData.nickName}
         </NativeText>
         <NativeText
           style={{ fontSize: 16, color: "#757475", marginBottom: 10 }}
         >
-          Email
+          Email : {currentTokkenUserData.email}
         </NativeText>
         <NativeText
           style={{ fontSize: 16, color: "#757475", marginBottom: 10 }}
         >
-          Address
+          Phone : {currentTokkenUserData.phoneNo}
         </NativeText>
         <View style={[styles.confirmModalBtnContainer, { marginTop: 10 }]}>
           <TouchableOpacity>
@@ -426,7 +648,7 @@ export default class Compony extends React.Component {
               bordered
               light
               style={{ borderColor: "#757375" }}
-              onPress={() => console.log("Reject")}
+              onPress={this.handleRejectCurrentTokkenConfirmation}
             >
               <Text style={{ color: "#757375" }}>Reject</Text>
             </Button>
@@ -531,6 +753,80 @@ export default class Compony extends React.Component {
     );
   };
 
+  //Method to show msg that no tokken user is currently available
+  renderCurrentTokkenUserErrorMsg = () => {
+    return (
+      <View style={[styles.startTokkenContainer]}>
+        <View style={[styles.startCurrentTokkenHeader]}>
+          <Text style={styles.metaBrand}>Tokkens Information</Text>
+        </View>
+        <View>
+          <Text>
+            Sorry no tokken users are currently available, please try again
+            later
+          </Text>
+        </View>
+        <View
+          style={[
+            styles.confirmModalBtnContainer,
+            { marginTop: 10, justifyContent: "flex-end" }
+          ]}
+        >
+          <TouchableOpacity>
+            <Button
+              bordered
+              light
+              style={{ borderColor: "#757375" }}
+              onPress={() => this.setState({ showMetaModal: false })}
+            >
+              <Text style={{ color: "#757375" }}>OK</Text>
+            </Button>
+          </TouchableOpacity>
+        </View>
+      </View>
+    );
+  };
+
+  //Method to show msg that application is unable to recognize user face
+  renderFaceRecongnizationErrorMsg = () => {
+    return (
+      <View style={[styles.startTokkenContainer]}>
+        <View style={[styles.startCurrentTokkenHeader]}>
+          <Text style={styles.metaBrand}>Facial Reconization Error!!</Text>
+        </View>
+        <View>
+          <Text>
+            Sorry we are unable to recognize the user face, still allow or
+            reject the user
+          </Text>
+        </View>
+        <View style={[styles.confirmModalBtnContainer, { marginTop: 10 }]}>
+          <TouchableOpacity>
+            <Button
+              bordered
+              light
+              style={styles.confirmModalBtn}
+              onPress={() => console.log("dont allow user")}
+            >
+              <Text style={{ color: "#009083" }}>Reject</Text>
+            </Button>
+          </TouchableOpacity>
+
+          <TouchableOpacity>
+            <Button
+              bordered
+              light
+              style={styles.confirmModalBtn}
+              onPress={() => console.log("still allow user")}
+            >
+              <Text style={{ color: "#009083" }}>Allow</Text>
+            </Button>
+          </TouchableOpacity>
+        </View>
+      </View>
+    );
+  };
+
   //= ==================End of Header methods===================//
 
   //= ==================Main methods===================//
@@ -541,7 +837,7 @@ export default class Compony extends React.Component {
         {this.renderCard(this.renderTotalTokkensCard())}
         {this.renderCard(this.renderBoughtTokkensCard())}
         {this.renderCard(this.renderRemainingTokkensCard())}
-        {this.renderCard(this.renderNextTokkenCard())}
+        {this.renderCard(this.renderWatingTokkenCard())}
       </View>
     );
   };
@@ -572,7 +868,9 @@ export default class Compony extends React.Component {
         </View>
         <View>
           <NativeText style={[styles.cardMeta, { color: "#484848" }]}>
-            {this.state.tokkenCount_d}
+            {this.state.companyTodayTokkenData
+              ? this.state.companyTodayTokkenData.limit
+              : 0}
           </NativeText>
         </View>
         <View style={{ marginTop: 20 }}>
@@ -603,7 +901,9 @@ export default class Compony extends React.Component {
         </View>
         <View>
           <NativeText style={[styles.cardMeta, { color: "#484848" }]}>
-            {this.state.boughtTokkens}
+            {this.state.companyTodayTokkenData
+              ? this.state.companyTodayTokkenData.bought
+              : 0}
           </NativeText>
         </View>
         <View style={{ marginTop: 20 }}>
@@ -629,7 +929,9 @@ export default class Compony extends React.Component {
         </View>
         <View>
           <NativeText style={[styles.cardMeta, { color: "#484848" }]}>
-            {this.state.remainingTokkens}
+            {this.state.companyTodayTokkenData
+              ? this.state.companyTodayTokkenData.remaining
+              : 0}
           </NativeText>
         </View>
         <View style={{ marginTop: 20 }}>
@@ -640,7 +942,7 @@ export default class Compony extends React.Component {
   };
 
   // method to render the card showing the next tokken
-  renderNextTokkenCard = () => {
+  renderWatingTokkenCard = () => {
     return (
       <View>
         <View style={[styles.cardItems]}>
@@ -655,7 +957,9 @@ export default class Compony extends React.Component {
         </View>
         <View>
           <NativeText style={[styles.cardMeta, { color: "#484848" }]}>
-            {this.state.waitingTokkens}
+            {this.state.companyTodayTokkenData
+              ? this.state.companyTodayTokkenData.waiting
+              : 0}
           </NativeText>
         </View>
         <View style={{ marginTop: 20 }}>
@@ -691,7 +995,10 @@ export default class Compony extends React.Component {
           </TouchableOpacity>
         </View>
         <NativeText style={styles.footerItemText}>
-          Total:{this.state.tokkenCount_d}
+          Total:
+          {this.state.companyTodayTokkenData
+            ? this.state.companyTodayTokkenData.limit
+            : 0}
         </NativeText>
       </View>
     );
@@ -764,63 +1071,59 @@ export default class Compony extends React.Component {
 
   //Method to render the tokken setup form
   renderTokkenSetup = (type = "new") => {
-    const { tokkenCount, tokkenTime } = this.state;
+    const { companyTodayTokkenData, autoStartTokken } = this.state;
+    console.log("renderTokkenSetup type==>", type);
     return (
       <View>
         <View style={{ marginBottom: 15 }}>
           <Text style={styles.metaBrand}>Please Setup Today's Tokkens</Text>
         </View>
         <View style={styles.metaItem}>
-          <View
-            style={{
-              margin: 5,
-              display: "flex",
-              flexDirection: "row",
-              alignItems: "center",
-              justifyContent: "space-between"
-            }}
-          >
-            <Text style={[styles.metaItemMeta, { marginRight: 10 }]}>
-              TOKKENS
-            </Text>
-            <NumericInput
-              type="up-down"
-              initValue={tokkenCount}
-              onChange={value => this.setState({ tokkenCount: value })}
-              value={this.state.tokkenCount}
-              totalWidth={200}
-              totalHeight={50}
-              minValue={0}
-              iconSize={35}
-              rounded
-            />
-          </View>
+          <Text style={[styles.metaItemMeta]}>TOKKENS</Text>
+          <NumericInput
+            type="up-down"
+            initValue={
+              companyTodayTokkenData ? companyTodayTokkenData.limit : 0
+            }
+            onChange={value => this.setState({ tokkenCount: value })}
+            value={this.state.tokkenCount}
+            totalWidth={200}
+            totalHeight={50}
+            minValue={0}
+            iconSize={35}
+            rounded
+          />
         </View>
         <View style={styles.metaItem}>
-          <View
-            style={{
-              margin: 5,
-              display: "flex",
-              flexDirection: "row",
-              alignItems: "center",
-              justifyContent: "space-between"
-            }}
-          >
-            <Text style={[styles.metaItemMeta, { marginRight: 10 }]}>
-              TIME(MIN)
+          <Text style={[styles.metaItemMeta]}>TIME(MIN)</Text>
+          <NumericInput
+            type="up-down"
+            initValue={companyTodayTokkenData ? companyTodayTokkenData.time : 0}
+            onChange={value => this.setState({ tokkenTime: value })}
+            value={this.state.tokkenTime}
+            totalWidth={200}
+            totalHeight={50}
+            iconSize={35}
+            minValue={0}
+            rounded
+          />
+        </View>
+        <View style={styles.metaItem}>
+          <TouchableOpacity>
+            <Text
+              style={[styles.metaItemMeta]}
+              onPress={() =>
+                this.setState({ autoStartTokken: !autoStartTokken })
+              }
+            >
+              AUTO START TOKKEN
             </Text>
-            <NumericInput
-              type="up-down"
-              initValue={tokkenTime}
-              onChange={value => this.setState({ tokkenTime: value })}
-              value={this.state.tokkenTime}
-              totalWidth={200}
-              totalHeight={50}
-              iconSize={35}
-              minValue={0}
-              rounded
-            />
-          </View>
+          </TouchableOpacity>
+          <Radio
+            selected={autoStartTokken}
+            selectedColor="black"
+            onPress={() => this.setState({ autoStartTokken: !autoStartTokken })}
+          />
         </View>
         <View
           style={[styles.metaItem, { justifyContent: "center", marginTop: 10 }]}
@@ -835,7 +1138,7 @@ export default class Compony extends React.Component {
     );
   };
 
-  renderTokkenSetupConfirmation = (type = "new") => {
+  renderTokkenSetupConfirmation = type => {
     return (
       <View>
         <View style={{ marginBottom: 15 }}>

@@ -37,12 +37,20 @@ const styles = StyleSheet.create({
     alignItems: "center"
   },
   startTokkenContainer: { minWidth: 300 },
-  startCurrentTokkenHeader:{
+  startCurrentTokkenHeader: {
     marginBottom: 5,
     paddingBottom: 10,
     borderBottomWidth: 1,
     borderBottomColor: "#DEDEDF",
     borderStyle: "solid"
+  },
+  currentTokkenActiveIcon: {
+    color: "#FABC3C",
+    fontWeight: "bold"
+  },
+  currentTokkenActiveText: {
+    color: "#FABC3C",
+    fontWeight: "bold"
   },
   main: {
     display: "flex",
@@ -173,6 +181,8 @@ const styles = StyleSheet.create({
     fontWeight: "bold"
   },
   metaItem: {
+    minWidth: 300,
+    marginBottom: 15,
     display: "flex",
     justifyContent: "space-between",
     flexDirection: "row"

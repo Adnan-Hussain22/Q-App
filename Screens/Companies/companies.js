@@ -13,68 +13,39 @@ import {
   Icon
 } from "native-base";
 import Loader from "../Loader/loader";
-const company = {
-  address: ["Creek Club Bakery, Phase VIII, DHA", "کراچی", "پاکستان"],
-  admins: ["adnanrajput22@gmail.com", "adnanrajput42@gmail.com"],
-  certificates: [
-    "https://firebasestorage.googleapis.com/v0/b/qapp-ca040.appspot.com/o/companyCertificates%2Fa9f942ea-9351-4157-b7e5-dbad49b9edc7.jpg?alt=media&token=25d0a999-3b2f-4e62-98a4-1660e1236861",
-    "https://firebasestorage.googleapis.com/v0/b/qapp-ca040.appspot.com/o/companyCertificates%2Fdabcd738-071f-42df-8da8-d78e77e0161f.jpg?alt=media&token=cf960777-e23e-4e5c-b1e3-035adfcaba04",
-    "https://firebasestorage.googleapis.com/v0/b/qapp-ca040.appspot.com/o/companyCertificates%2F11020cd1-3741-49ab-8dba-1643525141ac.jpg?alt=media&token=e062109b-f3c8-41c7-95c3-5bf732d57698"
-  ],
-  coords: {
-    latitude: 24.8481905,
-    longitude: 67.0277179
-  },
-  name: "Tech Native",
-  registeredBy: "adnanrajput42@gmail.com",
-  since: 1537556400000,
-  id: "Lgu1AvZFW4q1pFl76Jwq",
-  timing: {
-    from: {
-      amPM: "AM",
-      hour: "08",
-      minute: "00"
-    },
-    to: {
-      amPM: "PM",
-      hour: "11",
-      minute: "00"
-    }
-  }
-};
 export default class App extends React.Component {
   state = {
-    companies: [company],
+    companies: [],
     isReady: true,
     showMetaModal: false,
     metaCompany: null
   };
 
   componentDidMount() {
-    // const { companies } = this.props.navigation.state.params;
-    // console.log("componentDidMount...companies ==>", companies);
-    this.setState({ isReady: true });
+    const { companies } = this.props.navigation.state.params;
+    this.setState({ isReady: true, companies });
   }
 
   handleSelectCompany = async (value, index) => {
     try {
       const { res, err, status } = await this.handleValidateTodayTokken(value);
       if (res) {
-        let data = null;
+        let tokkenSetupId = null;
         res.forEach(doc => {
-          data = doc.data();
+          tokkenSetupId = doc.id;
         });
         this.props.navigation.navigate("Company", {
           status: true,
-          data,
-          companyId: value.id
+          companyData: value,
+          companyId: value.id,
+          tokkenSetupId
         });
         return;
       }
       this.props.navigation.navigate("Company", {
         status: false,
-        data: null,
-        companyId: value
+        companyData: value,
+        companyId: value.id
       });
     } catch (err) {
       console.log(err);
@@ -88,8 +59,8 @@ export default class App extends React.Component {
     const tokkensMetaRef = Firebase.fireStore.collection("tokkensMeta");
     try {
       const query = tokkensMetaRef
-        .where("company", "==", company.id)
-        .where("date", "==", new Date().toLocaleDateString());
+        .where("companyId", "==", company.id)
+        .where("date", "==", new Date().toDateString());
       const snap = await query.get();
       this.setState({ isReady: true });
       if (snap.size) {
@@ -131,7 +102,7 @@ export default class App extends React.Component {
           <MetaModal
             showModal={showMetaModal}
             handleOnCloseModal={() => this.setState({ showMetaModal: false })}
-            meta={metaCompany && this.renderCompanyMeta()}
+            meta={metaCompany}
           />
           <Text
             style={{
