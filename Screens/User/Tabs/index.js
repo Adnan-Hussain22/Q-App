@@ -11,9 +11,11 @@ const UserTabs = props => {
     userProfile,
     currentPage,
     handleChangePage,
-    boughtTokkens,
-    handleValidateTokkens,
-    handleFetchProfile
+    handleValidateTodayTokkens,
+    handleFetchProfile,
+    currentTokken,
+    currentTokkenTimer,
+    handleOnCurrentTokkenTimeElapsed
   } = props;
   return (
     <View>
@@ -27,8 +29,10 @@ const UserTabs = props => {
           <Dashboard
             userProfile={userProfile}
             handleChangePage={handleChangePage}
-            handleValidateTokkens={handleValidateTokkens}
-            boughtTokkens={boughtTokkens}
+            handleValidateTodayTokkens={handleValidateTodayTokkens}
+            currentTokken={currentTokken}
+            currentTokkenTimer={currentTokkenTimer}
+            handleOnCurrentTokkenTimeElapsed={handleOnCurrentTokkenTimeElapsed}
           />
         </Tab>
         <Tab
@@ -40,8 +44,8 @@ const UserTabs = props => {
           <Companies
             authProfile={userProfile}
             handleChangePage={handleChangePage}
-            boughtTokkens={boughtTokkens}
-            handleValidateTokkens={handleValidateTokkens}
+            handleValidateTodayTokkens={handleValidateTodayTokkens}
+            currentTokkenTimer={currentTokkenTimer}
           />
         </Tab>
         <Tab

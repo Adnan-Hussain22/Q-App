@@ -10,13 +10,16 @@ export default class User extends React.Component {
     loading: true,
     currentAuth: null,
     authProfile: null,
-    boughtTokkens: null,
+    todayBoughtTokken: null,
+    currentPage: 0,
+    currentTokken: null,
+    currentTokkenTimer: null,
+    currentTokkenCompany: null
     // {
     //   email: "adnanrajput42@gmail.com",
     //   uid: "REILSdSgReZEJiHuohSqpqztv6q2",
     //   nickName: "Adnan Hussain"
     // },
-    currentPage: 0
   };
 
   async componentDidMount() {
@@ -24,11 +27,74 @@ export default class User extends React.Component {
     // console.log(this.props.navigation.state.params);
     try {
       const authProfile = await this.handleValidateProfile(currentAuth);
-      this.setState({ loading: false, currentAuth,authProfile });
+      this.handleFetchCurrentTokken(currentAuth);
+      this.setState({ loading: false, currentAuth, authProfile });
     } catch (err) {
       console.log(err);
     }
   }
+
+  //handle to fetch the current tokken
+  handleFetchCurrentTokken = async currentAuth => {
+    const userTokkensMeta = Firebase.fireStore.collection("userTokkensMeta")
+    // const snap = await userTokkensMeta.get();
+    // snap.forEach(doc => {
+    //   const data = doc.data();
+    //   console.log("user tokken meta=>", data);
+    //   console.log("date==>", new Date().toDateString());
+    //   console.log("date.date==>", data.date);
+    //   console.log(
+    //     "date === data.date ==>",
+    //     new Date().toDateString() === data.date
+    //   );
+    //   console.log("uid==>", currentAuth.uid);
+    //   console.log("data.uid==>", data.uid);
+    //   console.log("uid === data.uid ==>", currentAuth.uid === data.uid);
+    //   console.log("status ==>", data.status);
+    //   console.log("status === started ==>", data.status === "started");
+    // });
+    const query = userTokkensMeta
+      .where("date", "==", new Date().toDateString())
+      .where("uid", "==", currentAuth.uid)
+      .where("status", "==", "started");
+    query.onSnapshot(snap => {
+      snap.forEach(doc => {
+        const data = doc.data();
+        console.log("handleFetchCurrentTokken onSnap==>", data);
+        this.handleFetchCurrentCompanyTokkenTime(data.company.id).then(
+          currentTokkenTime => {
+            console.log("currentTokkenTime==>", currentTokkenTime);
+            const currentTokkenTimer = this.handleGetTokkenTimer(
+              data.started,
+              currentTokkenTime
+            );
+            this.setState({ currentTokken: data, currentTokkenTimer });
+          }
+        );
+      });
+    });
+  };
+
+  //handle to fetch the company data of associated company with current tokken
+  handleFetchCurrentCompanyTokkenTime = async companyId => {
+    try {
+      console.log(
+        "handleFetchCurrentCompanyTokkenTime companyId==>",
+        companyId
+      );
+      const tokkensMetaRef = Firebase.fireStore.collection("tokkensMeta");
+      const query = tokkensMetaRef
+        .where("date", "==", new Date().toDateString())
+        .where("companyId", "==", companyId);
+      const snap = await query.get();
+      let time = null;
+      snap.forEach(doc => {
+        const data = doc.data();
+        time = data.time;
+      });
+      return time;
+    } catch (err) {}
+  };
 
   //= ==========================================================//
   //= ==========================Tabs Handles===================//
@@ -69,11 +135,11 @@ export default class User extends React.Component {
 
   //--------------------Dasboard Handles------------//
 
-  handleValidateTokkens = async () => {
+  handleValidateTodayTokkens = async () => {
     const { currentAuth } = this.state;
     const userTokkensMetaRef = Firebase.fireStore.collection("userTokkensMeta");
     try {
-      let boughtTokkens = null;
+      let todayBoughtTokken = null;
       const query = userTokkensMetaRef
         .where("uid", "==", currentAuth.uid)
         .where("date", "==", new Date().toDateString());
@@ -81,15 +147,35 @@ export default class User extends React.Component {
       if (snap.size) {
         snap.forEach(doc => {
           const data = doc.data();
-          console.log("handleValidateTokkens==>", data);
-          boughtTokkens = { ...data, uid: currentAuth.uid };
+          console.log("handleValidateTodayTokkens==>", data);
+          todayBoughtTokken = { ...data, uid: currentAuth.uid };
         });
       }
-      this.setState({ boughtTokkens });
-      return boughtTokkens;
+      this.setState({ todayBoughtTokken });
+      return todayBoughtTokken;
     } catch (err) {
       console.log(err);
     }
+  };
+
+  //get the elapsed time of the started tokken
+  handleGetTokkenTimer = (startedTime_MiliSec, companyTiming_Min) => {
+    //get the now timing in miliseconds
+    const now_MiliSec = new Date().getTime();
+    //get the elapse time in seconds in miliseconds
+    const timeElapsed_Sec = (now_MiliSec - startedTime_MiliSec) / 1000;
+    // get the company time in seconds
+    const companyTiming_Sec = companyTiming_Min * 60;
+    //finaly get the tokken timer by subtract elapsed time sec from company time seconds
+    const tokkenTiming_Sec =
+      companyTiming_Sec - timeElapsed_Sec > 0
+        ? Math.ceil(companyTiming_Sec - timeElapsed_Sec)
+        : 0;
+    return tokkenTiming_Sec;
+  };
+
+  handleOnCurrentTokkenTimeElapsed = () => {
+    this.setState({ currentTokken: null, currentTokkenTimer: null });
   };
 
   //--------------------End of Dasboard Handles------------//
@@ -130,14 +216,18 @@ export default class User extends React.Component {
 
   //Method to render the main
   renderTabs = () => {
+    console.log('renderTabs==>')
     return (
       <UserTabs
         userProfile={this.state.authProfile}
         currentPage={this.state.currentPage}
         handleChangePage={this.handleChangePage}
-        boughtTokkens={this.state.boughtTokkens}
-        handleValidateTokkens={this.handleValidateTokkens}
+        todayBoughtTokken={this.state.todayBoughtTokken}
+        handleValidateTodayTokkens={this.handleValidateTodayTokkens}
         handleFetchProfile={this.handleFetchProfile}
+        currentTokken={this.state.currentTokken}
+        currentTokkenTimer={this.state.currentTokkenTimer}
+        handleOnCurrentTokkenTimeElapsed={this.handleOnCurrentTokkenTimeElapsed}
       />
     );
   };

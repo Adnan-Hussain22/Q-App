@@ -156,8 +156,9 @@ export default class Compony extends React.Component {
   handleFetchRecentTokkenUser = tokkenUsers =>
     _.orderBy(
       tokkenUsers,
-      [e => e.timing.hours, e => e.timing.minutes, e => e.timing.seconds],
-      ["asc", "asc", "asc"]
+      ["time"],
+      // [e => e.formatedTime.hours, e => e.timing.minutes, e => e.timing.seconds],
+      ["asc"]
     )[0];
 
   // Handle awake when the current tokken timmer is elapsed
@@ -403,7 +404,7 @@ export default class Compony extends React.Component {
       const usersTokkensMeta = Firebase.fireStore.collection("userTokkensMeta");
       await usersTokkensMeta
         .doc(currentTokkenUser.docId)
-        .update({ status: "started" });
+        .update({ status: "started",started:new Date().getTime() });
       this.setState({
         loading: false,
         startTokkenTimer: true,

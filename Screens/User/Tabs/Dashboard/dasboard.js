@@ -1,5 +1,5 @@
 import React from "react";
-import CountdownCircle from "react-native-countdown-circle";
+import CountdownCircle from "../../../../Components/react-native-countdown-circle";
 import {
   View,
   Text as NativeText,
@@ -18,26 +18,36 @@ export default class Dashboard extends React.Component {
       loading: true,
       authProfile: props.userProfile,
       boughtTokkens: null,
-      waitingTokkens: 0,
+      rejectedTokkens: 0,
       doneTokkens: 0,
-      currentAuth: null
+      currentAuth: null,
+      currentTokkenTimer: null,
+      currentTokken: null
     };
   }
 
   async componentDidMount() {
     const currentAuth = JSON.parse(await AsyncStorage.getItem("authUser"));
     const boughtTokkens = await this.handleValidateTokkens(currentAuth);
-    this.setState({ loading: false, currentAuth, boughtTokkens }, () =>
-      this.handleFetchStatistics()
-    );
+    console.log("boughtTokkens componentDidMount==>", boughtTokkens);
+    this.setState({ loading: false, currentAuth, boughtTokkens });
+    this.handleFetchStatistics();
   }
 
   static getDerivedStateFromProps(props, state) {
-    return { authProfile: props.userProfile };
+    console.log(
+      "getDerivedStateFromProps props.currentTokkenTimer=>",
+      props.currentTokkenTimer
+    );
+    return { authProfile: props.userProfile, ...props };
   }
 
+  //get real time updates of statistics
+  //subscribe for changes in statis
   handleFetchStatistics = () => {
     this.handleFetchBoughtTokkens();
+    this.handleFetchDoneTokkens();
+    this.handleFetchRejectedTokkens();
   };
 
   //fetch realtime updates for bought tokkens
@@ -50,15 +60,15 @@ export default class Dashboard extends React.Component {
     });
   };
 
-  //fetch realtime updates for waiting tokkens
-  handleFetchWaitingTokkens = () => {
+  //fetch realtime updates for rejected tokkens
+  handleFetchRejectedTokkens = () => {
     const { currentAuth } = this.state;
     const userTokkensMetaRef = Firebase.fireStore.collection("userTokkensMeta");
     const query = userTokkensMetaRef
       .where("uid", "==", currentAuth.uid)
-      .where("status", "==", "waiting");
+      .where("status", "==", "rejected");
     query.onSnapshot(snap => {
-      this.setState({ waitingTokkens: snap.size });
+      this.setState({ rejectedTokkens: snap.size });
     });
   };
 
@@ -89,7 +99,6 @@ export default class Dashboard extends React.Component {
   };
 
   handleValidateTokkens = async currentAuth => {
-    console.log("handleValidateTokkens");
     const userTokkensMetaRef = Firebase.fireStore.collection("userTokkensMeta");
     try {
       let boughtTokkens = null;
@@ -147,14 +156,14 @@ export default class Dashboard extends React.Component {
   };
 
   renderMain = () => {
-    const { boughtTokkens, waitingTokkens, doneTokkens } = this.state;
+    const { boughtTokkens, rejectedTokkens, doneTokkens } = this.state;
     return (
       <View style={styles.main}>
         {this.renderCards(
           this.renderCard(boughtTokkens, "Bought Tokkens", "#52A5DD")
         )}
         {this.renderCards(
-          this.renderCard(waitingTokkens, "Waiting Tokkens", "#EC3646")
+          this.renderCard(rejectedTokkens, "Rejected Tokkens", "#EC3646")
         )}
         {this.renderCards(
           this.renderCard(doneTokkens, "Done Tokkens", "#0C8040")
@@ -215,18 +224,18 @@ export default class Dashboard extends React.Component {
 
   //Method to render the current tokken status
   renderCurrentTokkenStatus = () => {
-    const { viewSize } = this.state;
+    const { viewSize, currentTokkenTimer } = this.state;
     return (
       <View>
-        <View style={styles.currentTokkenTimmer}>
+        <View style={styles.currentTokkenTimer}>
           <CountdownCircle
-            seconds={0}
+            seconds={currentTokkenTimer ? currentTokkenTimer : 0}
             radius={viewSize ? viewSize.width / 2 - 135 : 45}
             borderWidth={8}
             color="#ff003f"
             bgColor="#fff"
             textStyle={{ fontSize: 20 }}
-            onTimeElapsed={() => console.log("Elapsed!")}
+            onTimeElapsed={this.props.handleOnCurrentTokkenTimeElapsed}
             updateText={this.handleUpdateTokkenTime}
           />
         </View>

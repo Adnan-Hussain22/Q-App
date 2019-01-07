@@ -5,21 +5,21 @@ const StackNavigation = createStackNavigator(
     // Login: {
     //   screen: Screens.Login
     //  },
-    Home: {
-      screen: Screens.Home
-    },
-    Companies: {
-      screen: Screens.Companies
-    },
-    Company: {
-      screen: Screens.Company
-    },
+    // Home: {
+    //   screen: Screens.Home
+    // },
+    // Companies: {
+    //   screen: Screens.Companies
+    // },
+    // Company: {
+    //   screen: Screens.Company
+    // },
     // CompanyData: {
     //   screen: Screens.CompanyData
     // },
-    // User: {
-    //   screen: Screens.User
-    // }
+    User: {
+      screen: Screens.User
+    }
   },
   {
     headerMode: 'none',
