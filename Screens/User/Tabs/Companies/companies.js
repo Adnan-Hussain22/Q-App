@@ -280,6 +280,7 @@ export default class Companies extends React.Component {
       const userTokkensMetaRef = Firebase.fireStore.collection(
         "userTokkensMeta"
       );
+      const tokkensMetaRef = Firebase.fireStore.collection("tokkensMeta");
       const userTokkenTime = await this.handleGetUserTokkenTime();
       if (!userTokkenTime.status) {
         console.log("sorry cannot buy");
@@ -297,13 +298,25 @@ export default class Companies extends React.Component {
         ...userTokkenTime.userTokkenTime
       };
       const docId = (await userTokkensMetaRef.add(metaObj)).id;
-      if (docId)
+      if (docId) {
+        const snap = await tokkensMetaRef.get();
+        snap.forEach(doc => {
+          const data = doc.data();
+          tokkensMetaRef
+            .doc(doc.id)
+            .update({
+              bought: data.bought + 1,
+              remaining: data.remaining - 1,
+              waiting: data.waiting + 1
+            });
+        });
         Alert.alert(
           "Tokken Information",
           "Tokken Bought Successfull :)",
           [{ text: "OK", onPress: () => console.log("OK Pressed") }],
           { cancelable: false }
         );
+      }
     } catch (err) {
       console.log(err);
       // Alert.alert(
@@ -729,7 +742,7 @@ export default class Companies extends React.Component {
             </Text>
           </View>
           <View style={{ margin: 5 }}>
-            <Icon name="location-on" type="MaterialIcons" />
+            <Icon name="access-time" type="MaterialIcons" />
           </View>
         </View>
         <View style={styles.metaCompanyItem}>

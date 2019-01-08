@@ -65,11 +65,8 @@ export default class Home extends React.Component {
 
   // check if the user is registered with some company
   handleCompanyValidation = async () => {
-    console.log("handleCompanyValidation");
-    console.log("this.state.authUser", this.state.authUser);
     const companiesRef = Firebase.fireStore.collection("company");
     try {
-      // console.log(authUser)
       const query = companiesRef.where(
         "admins",
         "array-contains",
@@ -95,17 +92,16 @@ export default class Home extends React.Component {
   };
 
   handleCompanyClick = async () => {
-    //  this.props.navigation.navigate('CompanyData');
     this.setState({ loading: true });
     let companies = [];
     try {
+      //
       const { snap, status, err } = await this.handleCompanyValidation();
       if (snap) {
         snap.forEach(res => {
           const data = res.data();
           companies = companies.concat(data);
         });
-        // console.log('companies==>',companies)
         this.setState({ loading: false, companies }, () => {
           this.props.navigation.navigate("Companies", { companies });
         });

@@ -524,8 +524,7 @@ export default class CompanyData extends React.Component {
                 bordered
                 dark
                 onPress={() => {
-                  // this.setState({ showCompanyList: true })
-                  console.log(this.state.company)
+                  this.setState({ showCompanyList: true })
                 }}
               >
                 <Text style={styles.text}>Show companies</Text>

@@ -185,7 +185,8 @@ const styles = StyleSheet.create({
     marginBottom: 15,
     display: "flex",
     justifyContent: "space-between",
-    flexDirection: "row"
+    flexDirection: "row",
+    alignItems:'center'
   },
   metaItemMeta: {
     maxWidth: Dimensions.get("screen").width - 75

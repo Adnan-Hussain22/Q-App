@@ -18,7 +18,7 @@ export default class App extends React.Component {
     companies: [],
     isReady: true,
     showMetaModal: false,
-    metaCompany: null
+    meta: null
   };
 
   componentDidMount() {
@@ -95,14 +95,14 @@ export default class App extends React.Component {
   // method to render the view
   renderView = () => {
     console.log("renderView==>", companies);
-    const { companies, showMetaModal, metaCompany } = this.state;
+    const { companies, showMetaModal, meta } = this.state;
     return (
       <Container>
         <Content>
           <MetaModal
             showModal={showMetaModal}
             handleOnCloseModal={() => this.setState({ showMetaModal: false })}
-            meta={metaCompany}
+            meta={meta}
           />
           <Text
             style={{
@@ -122,7 +122,7 @@ export default class App extends React.Component {
                   onPress={() => this.handleSelectCompany(value, index)}
                   onLongPress={() =>
                     this.setState({
-                      metaCompany: this.state.companies[index],
+                      meta: this.renderCompanyMeta(value),
                       showMetaModal: true
                     })
                   }
@@ -143,8 +143,7 @@ export default class App extends React.Component {
   };
 
   // method to render the companyMeta
-  renderCompanyMeta = () => {
-    const { metaCompany } = this.state;
+  renderCompanyMeta = (metaCompany) => {
     return (
       <View>
         <View style={{ marginBottom: 15 }}>

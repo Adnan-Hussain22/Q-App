@@ -404,7 +404,7 @@ export default class Compony extends React.Component {
       const usersTokkensMeta = Firebase.fireStore.collection("userTokkensMeta");
       await usersTokkensMeta
         .doc(currentTokkenUser.docId)
-        .update({ status: "started",started:new Date().getTime() });
+        .update({ status: "started", started: new Date().getTime() });
       this.setState({
         loading: false,
         startTokkenTimer: true,
@@ -417,13 +417,24 @@ export default class Compony extends React.Component {
   };
 
   handleOnTokkenTimeElapsed = async () => {
-    const { currentStartedTokkenData } = this.state;
+    const {
+      currentStartedTokkenData,
+      companyTodayTokkenData,
+      tokkenSetup_Id
+    } = this.state;
     try {
       this.setState({ loading: true });
       const usersTokkensMeta = Firebase.fireStore.collection("userTokkensMeta");
+      const tokkensMetaRef = Firebase.fireStore.collection("tokkensMeta");
       await usersTokkensMeta
         .doc(currentStartedTokkenData.docId)
         .update({ status: "done" });
+      await tokkensMetaRef
+        .doc(tokkenSetup_Id)
+        .update({
+          finished: companyTodayTokkenData.finished + 1,
+          waiting: companyTodayTokkenData.waiting - 1
+        });
       this.setState({
         startTokkenTimer: false,
         tokkenTimer: null,
@@ -1109,7 +1120,7 @@ export default class Compony extends React.Component {
             rounded
           />
         </View>
-        <View style={styles.metaItem}>
+        {/* <View style={styles.metaItem}>
           <TouchableOpacity>
             <Text
               style={[styles.metaItemMeta]}
@@ -1125,7 +1136,7 @@ export default class Compony extends React.Component {
             selectedColor="black"
             onPress={() => this.setState({ autoStartTokken: !autoStartTokken })}
           />
-        </View>
+        </View> */}
         <View
           style={[styles.metaItem, { justifyContent: "center", marginTop: 10 }]}
         >
@@ -1149,7 +1160,7 @@ export default class Compony extends React.Component {
           <Text>Today's tokkens: {this.state.tokkenCount}</Text>
         </View>
         <View style={styles.metaItem}>
-          <Text>Each tokken time: {this.state.tokkenTime}</Text>
+          <Text>Each tokken time (Mins): {this.state.tokkenTime}</Text>
         </View>
         <View style={styles.confirmModalBtnContainer}>
           <TouchableOpacity style={{ borderRadius: 5 }}>
@@ -1160,7 +1171,7 @@ export default class Compony extends React.Component {
                 this.setState({ meta: this.renderTokkenSetup(type) });
               }}
             >
-              <Text style={{ color: "yellow" }}> NO </Text>
+              <Text style={{ color: "#008575" }}> NO </Text>
             </Button>
           </TouchableOpacity>
           <TouchableOpacity style={{ borderRadius: 5 }}>
@@ -1171,7 +1182,7 @@ export default class Compony extends React.Component {
                 this.handleSaveTokkens(type);
               }}
             >
-              <Text style={{ color: "red" }}> YES </Text>
+              <Text style={{ color: "#008575" }}> YES </Text>
             </Button>
           </TouchableOpacity>
         </View>

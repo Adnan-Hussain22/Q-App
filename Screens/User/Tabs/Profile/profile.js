@@ -153,6 +153,7 @@ export default class Profile extends React.Component {
 
   render() {
     const { loading, authProfile } = this.state;
+    console.log();
     if (loading)
       return (
         <View style={styles.loaderContainer}>
@@ -184,7 +185,13 @@ export default class Profile extends React.Component {
     const { showMetaModal, meta } = this.state;
     return (
       <View>
-        <MetaModal showModal={showMetaModal} meta={meta} />
+        <MetaModal
+          showModal={showMetaModal}
+          meta={meta}
+          handleOnCloseModal={() =>
+            this.setState({ showMetaModal: false, meta: null })
+          }
+        />
         {this.renderHeader()}
         {this.renderMain()}
       </View>
@@ -230,7 +237,7 @@ export default class Profile extends React.Component {
     return (
       <View style={styles.imageUploadMeta}>
         <Text style={styles.imageUploadMetaBrand}>
-          Select the option to upload the image
+          Select the options to upload the image
         </Text>
         <View style={styles.imageUploadMetaBtns}>
           <TouchableOpacity>
