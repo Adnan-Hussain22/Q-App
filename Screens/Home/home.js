@@ -1,6 +1,6 @@
 import React from "react";
 import {
-  Text,
+  NativeText,
   View,
   Button as NativeButton,
   AsyncStorage,
@@ -9,39 +9,11 @@ import {
   TouchableOpacity,
   ActivityIndicator
 } from "react-native";
-import { Button } from "native-base";
+import { Button, Text, Icon } from "native-base";
 import { Firebase } from "../../Config";
 import styles from "./style";
 import Loader from "../Loader/loader";
 import { MetaModal } from "../../Components";
-const company_d = {
-  address: ["Creek Club Bakery, Phase VIII, DHA", "کراچی", "پاکستان"],
-  admins: ["adnanrajput22@gmail.com", "adnanrajput42@gmail.com"],
-  certificates: [
-    "https://firebasestorage.googleapis.com/v0/b/qapp-ca040.appspot.com/o/companyCertificates%2Fa9f942ea-9351-4157-b7e5-dbad49b9edc7.jpg?alt=media&token=25d0a999-3b2f-4e62-98a4-1660e1236861",
-    "https://firebasestorage.googleapis.com/v0/b/qapp-ca040.appspot.com/o/companyCertificates%2Fdabcd738-071f-42df-8da8-d78e77e0161f.jpg?alt=media&token=cf960777-e23e-4e5c-b1e3-035adfcaba04",
-    "https://firebasestorage.googleapis.com/v0/b/qapp-ca040.appspot.com/o/companyCertificates%2F11020cd1-3741-49ab-8dba-1643525141ac.jpg?alt=media&token=e062109b-f3c8-41c7-95c3-5bf732d57698"
-  ],
-  coords: {
-    latitude: 24.8481905,
-    longitude: 67.0277179
-  },
-  name: "Tech Native",
-  registeredBy: "adnanrajput42@gmail.com",
-  since: 1537556400000,
-  timing: {
-    from: {
-      amPM: "AM",
-      hour: "08",
-      minute: "00"
-    },
-    to: {
-      amPM: "PM",
-      hour: "11",
-      minute: "00"
-    }
-  }
-};
 export default class Home extends React.Component {
   state = {
     authUser: "",
@@ -123,13 +95,13 @@ export default class Home extends React.Component {
 
   //= =======================END OF COMPANY HANDLES===========================//
 
-  //= =======================ALL HANDLES RELATED TO USER=====================//
+  //= =======================USER MODE HANDLES=====================//
 
   handleUserClick = () => {
     this.props.navigation.navigate("User");
   };
 
-  //= =======================END OF USER HANDLES===========================//
+  //= =======================END OF USER MODE HANDLES===========================//
 
   // Check if there is no activity than render the view else render loader
   render() {
@@ -148,8 +120,60 @@ export default class Home extends React.Component {
           meta={meta}
           handleOnCloseModal={this.handleOnCloseModal}
         />
-        <NativeButton title="Company" onPress={this.handleCompanyClick} />
-        <NativeButton title="User" onPress={this.handleUserClick} />
+        {this.renderMain()}
+        {this.renderFooter()}
+      </View>
+    );
+  };
+
+  //render the main
+  renderMain = () => {
+    return (
+      <View style={styles.main}>
+        {this.renderEmoji()}
+        <Text style={styles.mainBrand}>{"Welcome".toUpperCase()}</Text>
+        <Text style={styles.mainText1}>
+          {"Please tell me you identity".toUpperCase()}
+        </Text>
+      </View>
+    );
+  };
+
+  //render smile container
+  renderEmoji = () => {
+    return (
+      <View style={styles.emojiContianer}>
+        <Icon name="smile-o" type="FontAwesome" style={styles.emoji} />
+      </View>
+    );
+  };
+
+  //render the footer
+  renderFooter = () => {
+    return (
+      <View style={styles.footer}>
+        <TouchableOpacity style={styles.actionBtn}>
+          <Button
+            iconRight
+            dark
+            style={{ borderRadius: 5 }}
+            onPress={this.handleUserClick}
+          >
+            <Text>User</Text>
+            <Icon name="user" type="Feather" />
+          </Button>
+        </TouchableOpacity>
+        <TouchableOpacity style={styles.actionBtn}>
+          <Button
+            iconRight
+            dark
+            style={{ borderRadius: 5 }}
+            onPress={this.handleCompanyClick}
+          >
+            <Text>Company</Text>
+            <Icon name="users" type="Feather" />
+          </Button>
+        </TouchableOpacity>
       </View>
     );
   };
