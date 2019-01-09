@@ -32,7 +32,10 @@ export default class Login extends React.Component {
     console.log("handleLogin");
     try {
       const res = await FacebookLogIn();
-      console.log(res);
+      if(res.err){
+        Alert.alert("Error!!", err, [{ text: "OK" }]);
+        return;
+      }
       if (res.res) {
         console.log(res);
         const user = JSON.stringify(res.res);
@@ -40,13 +43,13 @@ export default class Login extends React.Component {
         this.props.navigation.navigate("Home");
       }
     } catch (err) {
-      Alert.alert("Error!!", err, [{ text: "OK" }]);
+
+      // Alert.alert("Error!!", err, [{ text: "OK" }]);
       console.log(err);
     }
   };
 
   render() {
-    // return this.renderView();
     return this.renderView();
   }
 

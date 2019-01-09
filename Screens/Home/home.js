@@ -1,22 +1,20 @@
 import React from "react";
 import {
-  NativeText,
   View,
-  Button as NativeButton,
   AsyncStorage,
   StyleSheet,
   Dimensions,
-  TouchableOpacity,
-  ActivityIndicator
+  TouchableOpacity
 } from "react-native";
 import { Button, Text, Icon } from "native-base";
 import { Firebase } from "../../Config";
 import styles from "./style";
 import Loader from "../Loader/loader";
 import { MetaModal } from "../../Components";
+import { Permissions, Notifications } from "expo";
 export default class Home extends React.Component {
   state = {
-    authUser: "",
+    authUser: null,
     companies: [],
     loading: false,
     showModal: false,
@@ -26,11 +24,53 @@ export default class Home extends React.Component {
   async componentDidMount() {
     // console.log(this.props.navigation.state.params);
     const authUser = JSON.parse(await AsyncStorage.getItem("authUser"));
-    this.setState({ authUser });
+    this.setState({ authUser }, () => {
+      this.handleRegisterPushNotificationsAsync();
+    });
   }
 
   handleOnCloseModal = () => {
     this.setState({ showModal: false });
+  };
+
+  //handle to request for push notification
+  handleRegisterPushNotificationsAsync = async () => {
+    try {
+      const { status: existingStatus } = await Permissions.getAsync(
+        Permissions.NOTIFICATIONS
+      );
+      let finalStatus = existingStatus;
+
+      // only ask if permissions have not already been determined, because
+      // iOS won't necessarily prompt the user a second time.
+      if (existingStatus !== "granted") {
+        // Android remote notification permissions are granted during the app
+        // install, so this will only ask on iOS
+        const { status } = await Permissions.askAsync(
+          Permissions.NOTIFICATIONS
+        );
+        finalStatus = status;
+      }
+
+      // Stop here if the user did not grant permissions
+      if (finalStatus !== "granted") {
+        return;
+      }
+
+      // Get the token that uniquely identifies this device
+      let token = await Notifications.getExpoPushTokenAsync();
+      this.handleSaveUserTokken(token);
+    } catch (err) {
+      console.log(err);
+    }
+  };
+
+  //handle save user expo tokken in firestore db
+  handleSaveUserTokken = async Tokken => {
+    Firebase.fireStore
+      .collection("users")
+      .doc(this.state.authUser.uid)
+      .update({ expoTokken: Tokken });
   };
 
   //= =======================ALL HANDLES RELATED TO COMPANY=====================//
@@ -133,7 +173,7 @@ export default class Home extends React.Component {
         {this.renderEmoji()}
         <Text style={styles.mainBrand}>{"Welcome".toUpperCase()}</Text>
         <Text style={styles.mainText1}>
-          {"Please tell me you identity".toUpperCase()}
+          {"Please tell me your identity".toUpperCase()}
         </Text>
       </View>
     );
