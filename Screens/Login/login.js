@@ -40,7 +40,7 @@ export default class Login extends React.Component {
         console.log(res);
         const user = JSON.stringify(res.res);
         await AsyncStorage.setItem("authUser", user);
-        this.props.navigation.navigate("Home");
+        this.props.navigation.replace("Home");
       }
     } catch (err) {
 
@@ -108,7 +108,7 @@ async function FacebookLogIn() {
       const { displayName, email, photoURL, uid } = user;
       return {
         status: 200,
-        res: { displayName, email: "adnanrajput42@gmail.com", photoURL, uid },
+        res: { displayName, email: "", photoURL, uid },
         err: null
       };
     } else {

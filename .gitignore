@@ -8,3 +8,5 @@ npm-debug.*
 Helpers/DB/*
 functions/node_modules/**/*
 functions
+.firebaserc
+firebase.json

@@ -36,7 +36,7 @@ export default class User extends React.Component {
 
   //handle to fetch the current tokken
   handleFetchCurrentTokken = async currentAuth => {
-    const userTokkensMeta = Firebase.fireStore.collection("userTokkensMeta")
+    const userTokkensMeta = Firebase.fireStore.collection("userTokkensMeta");
     // const snap = await userTokkensMeta.get();
     // snap.forEach(doc => {
     //   const data = doc.data();
@@ -216,7 +216,7 @@ export default class User extends React.Component {
 
   //Method to render the main
   renderTabs = () => {
-    console.log('renderTabs==>')
+    console.log("renderTabs==>");
     return (
       <UserTabs
         userProfile={this.state.authProfile}
@@ -250,10 +250,12 @@ export default class User extends React.Component {
 
   //Method to render the header
   renderUserAvatar = () => {
+    const { currentAuth } = this.state;
     const uri = "http://creex.club/app/img/avatar.jpg";
+    const authAvatar = currentAuth.photoURL ? currentAuth.photoURL : "";
     return (
       <View style={[styles.userAvatarContainer]}>
-        <Thumbnail small source={{ uri: uri }} />
+        <Thumbnail small source={{ uri: !authAvatar ? uri : authAvatar }} />
       </View>
     );
   };

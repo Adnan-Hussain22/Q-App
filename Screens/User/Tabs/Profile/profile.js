@@ -127,6 +127,7 @@ export default class Profile extends React.Component {
           phoneNo
         };
         await usersRef.doc(currentAuth.uid).set(obj);
+        await AsyncStorage.setItem("authUser",JSON.stringify({...currentAuth,obj}))
         this.setState({ loading: false });
         this.props.handleFetchProfile(obj);
         setTimeout(
